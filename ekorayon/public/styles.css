@@ -489,3 +489,38 @@ button:active,.btn:active,.login-link:active{transform:translateY(1px) scale(.98
  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
  .motion-reveal{opacity:1;transform:none}
 }
+
+
+/* ЭКОРАЙОН — motion experience 2.0: ambient particles, spotlight, depth */
+#eco-motion-layer{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:strict}
+.topbar,.container,.footer{position:relative;z-index:1}
+.eco-dust{position:absolute;left:var(--x);top:110%;width:var(--size);height:var(--size);border-radius:50%;background:#75dba0;opacity:0;box-shadow:0 0 10px #78e5ae88;animation:eco-dust-rise var(--duration) linear var(--delay) infinite}
+@keyframes eco-dust-rise{0%{transform:translate3d(0,0,0) scale(.5);opacity:0}12%{opacity:var(--alpha)}82%{opacity:var(--alpha)}100%{transform:translate3d(var(--drift),-125vh,0) scale(1.2);opacity:0}}
+#eco-scroll-progress{position:fixed;z-index:1000;left:0;top:0;width:100%;height:3px;pointer-events:none;background:#173d2b20}
+#eco-scroll-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,#61c98b,#d7c17d,#62d9b2);box-shadow:0 0 12px #66dfa5;transition:width .08s linear}
+.eco-spotlight{position:relative;isolation:isolate;overflow:hidden}
+.eco-spotlight:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;background:radial-gradient(280px circle at var(--spot-x,50%) var(--spot-y,50%),#9cebb52b,transparent 70%);transition:opacity .25s ease}
+.eco-spotlight:hover:before{opacity:1}
+@media(hover:hover) and (pointer:fine){
+ .eco-depth{transform-style:preserve-3d;will-change:transform;transition:transform .24s ease,box-shadow .3s ease}
+ .eco-depth:hover{transform:perspective(850px) rotateX(var(--tilt-y,0deg)) rotateY(var(--tilt-x,0deg)) translateY(-4px);box-shadow:0 20px 42px #173c2928}
+}
+.btn,.login-link,.city-music-toggle,.city-event-btn,.city-turn-btn,.builder-actions button{position:relative;isolation:isolate;overflow:hidden}
+.btn:after,.login-link:after,.city-music-toggle:after,.city-event-btn:after,.city-turn-btn:after,.builder-actions button:after{content:"";position:absolute;top:-80%;bottom:-80%;left:-55%;width:32%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,#ffffff55,transparent);transition:left .65s ease;pointer-events:none;z-index:-1}
+.btn:hover:after,.login-link:hover:after,.city-music-toggle:hover:after,.city-event-btn:hover:after,.city-turn-btn:hover:after,.builder-actions button:hover:after{left:130%}
+.brand-mark{position:relative;overflow:hidden}
+.brand-mark:after{content:"";position:absolute;inset:-60%;background:linear-gradient(110deg,transparent 42%,#ffffff66 50%,transparent 58%);transform:translateX(-100%);animation:eco-logo-glint 6s ease-in-out infinite}
+@keyframes eco-logo-glint{0%,68%{transform:translateX(-100%)}88%,100%{transform:translateX(100%)}}
+.hero h1 em{background:linear-gradient(100deg,#d9bd7a,#fff0bd,#c3e8c8,#d9bd7a);background-size:230% auto;background-clip:text;-webkit-background-clip:text;color:transparent;animation:eco-title-shine 8s linear infinite}
+@keyframes eco-title-shine{to{background-position:230% center}}
+.footer-links a{transition:color .2s ease,transform .2s ease}
+.footer-links a:hover{color:#d9bd7a;transform:translateY(-2px)}
+.city-cell.occupied{transition:filter .25s ease,transform .25s ease}
+.city-cell.occupied:hover{filter:brightness(1.25) drop-shadow(0 0 9px #8affc5);transform:scale(1.06);z-index:2}
+.city-music-icon{animation:eco-music-pulse 2.8s ease-in-out infinite}
+@keyframes eco-music-pulse{0%,100%{box-shadow:0 0 0 0 #5ef2ae20}50%{box-shadow:0 0 0 9px #5ef2ae00}}
+@media(prefers-reduced-motion:reduce){
+ #eco-motion-layer,#eco-scroll-progress{display:none!important}
+ .eco-depth{transform:none!important}
+ .eco-spotlight:before{display:none}
+}

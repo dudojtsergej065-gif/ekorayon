@@ -96,7 +96,7 @@ app.get('/missions',async(req,res,next)=>{try{
 app.post('/missions/:id/join',requireSchool,async(req,res,next)=>{try{
  const m=await query('SELECT id FROM eco_missions WHERE id=$1 AND active=true AND starts_on<=CURRENT_DATE AND (ends_on IS NULL OR ends_on>=CURRENT_DATE)',[req.params.id]);
  if(!m.rowCount)return redirectMsg(res,'/missions','Задание уже недоступно.');
- await query('INSERT INTO mission_submissions(mission_id,school_id,note) VALUES($1,$2,$3) ON CONFLICT(mission_id,school_id) DO NOTHING',[req.params.id,req.session.user.school_id,(req.body.note||'').trim()||null]);
+ await query('INSERT INTO mission_submissions(mission_id,school_id,note) VALUES($1,$2,$3) ON CONFLICT(mission_id,school_id) DO UPDATE SET note=EXCLUDED.note,status=$4,reviewed_by=NULL,created_at=NOW() WHERE mission_submissions.status=$5',[req.params.id,req.session.user.school_id,(req.body.note||'').trim()||null,'pending','rejected']);
  res.redirect('/missions?message='+encodeURIComponent('Участие отправлено администрации на проверку.'));
  }catch(e){next(e)}});
 app.get('/admin/missions',requireAdmin,async(req,res,next)=>{try{

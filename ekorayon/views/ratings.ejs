@@ -2,14 +2,14 @@
 
 <section class="page-head ratings-head">
   <span class="eyebrow">ЭКО-ЛИДЕРЫ РАЙОНА</span>
-  <h1>Рейтинг <em>ЭКОРАЙОНА</em></h1>
+  <h1><%= t('Рейтинг','Рэйтынг') %> <em>ЭКОРАЙОНА</em></h1>
   <p>Сравниваем реальные результаты школ и классов по собранному вторсырью. В рейтинг входят записи, ожидающие проверки, и подтверждённые записи.</p>
   <div class="ratings-head-note"><span class="ratings-pulse"></span> Главный рейтинг — по фактической массе, без баллов</div>
 </section>
 
 <section class="section ratings-main-section">
   <div class="ratings-section-title">
-    <div><span class="eyebrow">КТО ВПЕРЕДИ?</span><h2>Лидеры ЭКОРАЙОНА</h2></div>
+    <div><span class="eyebrow">КТО ВПЕРЕДИ?</span><h2><%= t('Лидеры ЭКОРАЙОНА','Лідары ЭКАРАЁНА') %></h2></div>
     <span class="ratings-unit">Общий сбор · кг</span>
   </div>
 
@@ -48,7 +48,7 @@
 
 <section class="section ratings-panel" style="margin:22px 0;border-color:#8b7b36;background:linear-gradient(145deg,#282719,#172522)">
   <div class="ratings-section-title">
-    <div><span class="eyebrow">НАГРАДЫ И ДОСТИЖЕНИЯ</span><h2>Мотивационный рейтинг</h2></div>
+    <div><span class="eyebrow">НАГРАДЫ И ДОСТИЖЕНИЯ</span><h2><%= t('Мотивационный рейтинг','Матывацыйны рэйтынг') %></h2></div>
     <span class="ratings-icon">⭐</span>
   </div>
   <p style="color:#d8e8d9;line-height:1.7;margin:0 0 10px">Это отдельный рейтинг по баллам: за сдачу разных видов вторсырья и участие в экологических мероприятиях. Баллы не прибавляются к килограммам и не влияют на основной рейтинг.</p>
@@ -57,7 +57,7 @@
 
 <div class="detail-grid ratings-detail-grid">
   <section class="section ratings-panel">
-    <div class="ratings-section-title"><div><span class="eyebrow">КОМАНДНЫЙ РЕЗУЛЬТАТ</span><h2>Рейтинг классов</h2></div><span class="ratings-icon">🎓</span></div>
+    <div class="ratings-section-title"><div><span class="eyebrow">КОМАНДНЫЙ РЕЗУЛЬТАТ</span><h2><%= t('Рейтинг классов','Рэйтынг класаў') %></h2></div><span class="ratings-icon">🎓</span></div>
     <% if (classes.length) { %>
       <div class="table-wrap"><table class="ratings-table"><thead><tr><th>Класс</th><th>Школа</th><th>Сбор</th></tr></thead><tbody>
         <% classes.forEach((c,i)=>{ %><tr><td><span class="rank-badge"><%= i+1 %></span> <strong><%= c.class_name %></strong></td><td><%= c.school_name %></td><td><strong class="ratings-kg"><%= Number(c.total).toLocaleString('ru-RU',{maximumFractionDigits:2}) %> кг</strong></td></tr><% }) %>
@@ -66,7 +66,7 @@
   </section>
 
   <section class="section ratings-panel">
-    <div class="ratings-section-title"><div><span class="eyebrow">ЧТО СДАЮТ ЧАЩЕ?</span><h2>Виды вторсырья</h2></div><span class="ratings-icon">♻️</span></div>
+    <div class="ratings-section-title"><div><span class="eyebrow">ЧТО СДАЮТ ЧАЩЕ?</span><h2><%= t('Виды вторсырья','Віды другаснай сыравіны') %></h2></div><span class="ratings-icon">♻️</span></div>
     <div class="ratings-material-list">
       <% materials.forEach((m,i)=>{ %>
         <div class="ratings-material-item"><span class="ratings-material-number"><%= i+1 %></span><span class="ratings-material-name"><%= m.name %></span><strong><%= Number(m.total).toLocaleString('ru-RU',{maximumFractionDigits:2}) %> кг</strong></div>
@@ -77,11 +77,11 @@
 
 <div class="detail-grid ratings-period-grid">
   <section class="section ratings-period-card">
-    <span class="eyebrow">АКТИВНОСТЬ СЕЙЧАС</span><h2>Рейтинг месяца</h2>
+    <span class="eyebrow">АКТИВНОСТЬ СЕЙЧАС</span><h2><%= t('Рейтинг месяца','Рэйтынг месяца') %></h2>
     <% if (monthly.length) { %><div class="ratings-period-list"><% monthly.forEach((s,i)=>{ %><div class="ratings-period-row"><span class="rank-badge"><%= i+1 %></span><span><%= s.name %></span><strong><%= Number(s.total).toLocaleString('ru-RU',{maximumFractionDigits:2}) %> кг</strong></div><% }) %></div><% } else { %><div class="empty">За этот месяц записей пока нет.</div><% } %>
   </section>
   <section class="section ratings-period-card">
-    <span class="eyebrow">БОЛЬШОЙ ВКЛАД</span><h2>Рейтинг года</h2>
+    <span class="eyebrow">БОЛЬШОЙ ВКЛАД</span><h2><%= t('Рейтинг года','Рэйтынг года') %></h2>
     <% if (yearly.length) { %><div class="ratings-period-list"><% yearly.forEach((s,i)=>{ %><div class="ratings-period-row"><span class="rank-badge"><%= i+1 %></span><span><%= s.name %></span><strong><%= Number(s.total).toLocaleString('ru-RU',{maximumFractionDigits:2}) %> кг</strong></div><% }) %></div><% } else { %><div class="empty">За этот год записей пока нет.</div><% } %>
   </section>
 </div>

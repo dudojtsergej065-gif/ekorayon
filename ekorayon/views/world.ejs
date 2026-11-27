@@ -1,19 +1,57 @@
 <%- include('partials/header') %>
-<section class="world-page">
- <div class="world-hero">
-  <span class="world-kicker">🌌 <%= t('ОБЩИЙ МИР ЭКОРАЙОНА','АГУЛЬНЫ СВЕТ ЭКАРАЁНА') %></span>
-  <h1><%= t('Мир, который мы создаём вместе','Свет, які мы ствараем разам') %></h1>
-  <p><%= t('Каждый подтверждённый килограмм помогает нашему виртуальному миру расти. Школы района меняют его вместе!','Кожны пацверджаны кілаграм дапамагае нашаму віртуальнаму свету расці. Школы раёна змяняюць яго разам!') %></p>
-  <div class="world-orb-wrap"><div class="world-orb"><span>🌍</span><i></i></div><div class="world-orbit"></div><b><%= Number(totals.kg).toLocaleString('ru-RU') %> кг</b></div>
- </div>
- <div class="world-level panel">
-  <div class="world-level-heading"><div><small><%= t('ТЕКУЩАЯ ЭПОХА','БЯГУЧАЯ ЭПОХА') %></small><h2><%= lang==='by'?current.nameBy:current.name %></h2><p><%= lang==='by'?current.descBy:current.desc %></p></div><strong><%= current.icon %></strong></div>
-  <% if(next){ %><div class="world-progress-label"><span><%= t('До следующего открытия','Да наступнага адкрыцця') %>: <b><%= lang==='by'?next.nameBy:next.name %></b></span><b><%= Math.round(progress) %>%</b></div><div class="world-progress"><i style="width:<%= progress %>%"></i></div><small><%= Math.max(0,Number(next.kg)-Number(totals.kg)).toLocaleString('ru-RU') %> кг <%= t('до новой эпохи','да новай эпохі') %></small><% }else{ %><div class="world-complete">✨ <%= t('Легендарный уровень открыт!','Легендарны ўзровень адкрыты!') %></div><% } %>
- </div>
- <section class="world-map-section"><div class="section-head"><div><small><%= t('КАРТА РАЗВИТИЯ','КАРТА РАЗВІЦЦЯ') %></small><h2><%= t('Как меняется наш мир','Як змяняецца наш свет') %></h2></div><span class="world-live">● <%= t('Обновляется по подтверждённым данным','Абнаўляецца па пацверджаных даных') %></span></div>
-  <div class="world-zones"><% stages.forEach((s,i)=>{const unlocked=Number(totals.kg)>=s.kg;%><article class="world-zone <%= unlocked?'unlocked':'locked' %>"><span class="zone-icon"><%= unlocked?s.icon:'🔒' %></span><small><%= t('ЭПОХА','ЭПОХА') %> <%= i+1 %></small><h3><%= lang==='by'?s.nameBy:s.name %></h3><p><%= lang==='by'?s.descBy:s.desc %></p><b><%= Number(s.kg).toLocaleString('ru-RU') %> кг</b></article><% }) %></div>
+<% const activeStage=stages.findIndex(x=>x.kg===current.kg); const avatars={sprout:'🌱',fox:'🦊',owl:'🦉',wolf:'🐺',dragon:'🐉',phoenix:'🔥'}; %>
+<section class="planet-page">
+ <div class="planet-commandbar"><span><i></i> ЭКОСИСТЕМА ЭКОРАЙОНА</span><span>ЦИФРОВАЯ ПЛАНЕТА · <b>ОНЛАЙН</b></span></div>
+ <section class="planet-hero">
+  <div class="planet-hero-copy">
+   <span class="planet-kicker">✦ <%= t('ОБЩИЙ МИР. ОБЩАЯ ЦЕЛЬ.','АГУЛЬНЫ СВЕТ. АГУЛЬНАЯ МЭТА.') %></span>
+   <h1><%= t('ЭКО','ЭКА') %><em>ПЛАНЕТА</em></h1>
+   <p><%= t('Это наш общий цифровой мир. Он развивается благодаря подтверждённым экологическим действиям школ района. Чем больше мы делаем вместе — тем зеленее становится планета.','Гэта наш агульны лічбавы свет. Ён развіваецца дзякуючы пацверджаным экалагічным дзеянням школ раёна. Чым больш мы робім разам — тым зелянейшай становіцца планета.') %></p>
+   <div class="planet-hero-actions"><a class="planet-action-main" href="/missions">⚡ <%= t('Взять экомиссию','Узяць экаміcію') %></a><a class="planet-action-secondary" href="/pulse">Смотреть пульс района ↗</a></div>
+   <div class="planet-proof"><span>●</span> <%= t('Данные обновляются по подтверждённым результатам','Даныя абнаўляюцца па пацверджаных выніках') %></div>
+  </div>
+  <div class="planet-stage-visual stage-<%= activeStage %>">
+   <div class="planet-stars"></div><div class="planet-moon"></div>
+   <div class="planet-orbit orbit-a"></div><div class="planet-orbit orbit-b"></div><div class="planet-orbit orbit-c"></div>
+   <div class="planet-sphere"><div class="planet-clouds"></div><div class="planet-land land-a"></div><div class="planet-land land-b"></div><div class="planet-land land-c"></div><div class="planet-shine"></div><div class="planet-surface-badge"><span><%= current.icon %></span><small><%= t('НАША ЭПОХА','НАША ЭПОХА') %></small></div></div>
+   <div class="planet-node node-a">♻</div><div class="planet-node node-b">🌱</div><div class="planet-node node-c">✦</div>
+   <div class="planet-visual-caption"><small><%= t('ТЕКУЩАЯ ЭПОХА','БЯГУЧАЯ ЭПОХА') %></small><b><%= lang==='by'?current.nameBy:current.name %></b></div>
+  </div>
+  <div class="planet-hero-bottom"><span>EARTH SYSTEM / 01</span><span>POWERED BY REAL ACTIONS <b>↗</b></span></div>
  </section>
- <section class="world-leaders"><div class="section-head"><div><small><%= t('СОЗДАТЕЛИ МИРА','СТВАРАЛЬНІКІ СВЕТУ') %></small><h2><%= t('Самые активные команды','Самыя актыўныя каманды') %></h2></div><a href="/battles"><%= t('Эко-баттлы →','Эка-батлы →') %></a></div>
- <div class="hall-list"><% leaders.forEach((s,i)=>{const avatars={sprout:'🌱',fox:'🦊',owl:'🦉',wolf:'🐺',dragon:'🐉',phoenix:'🔥'};%><a class="hall-row" href="/schools/<%= s.id %>"><span class="hall-rank"><%= i===0?'👑':i+1 %></span><span class="world-team-avatar"><%= avatars[s.avatar_code]||'🌱' %></span><b><%= s.name %></b><strong><%= Number(s.kg).toLocaleString('ru-RU') %> кг</strong></a><% }) %></div></section>
+ <section class="planet-metrics">
+  <article class="planet-metric metric-primary"><span>♻</span><small><%= t('ПОДТВЕРЖДЁННЫЙ СБОР','ПАЦВЕРДЖАНЫ ЗБОР') %></small><strong><%= Number(totals.kg).toLocaleString('ru-RU') %><i>кг</i></strong><div class="metric-foot">РЕАЛЬНЫЙ ВКЛАД ШКОЛ</div></article>
+  <article class="planet-metric"><span>🏫</span><small><%= t('ШКОЛЫ-УЧАСТНИЦЫ','ШКОЛЫ-ЎДЗЕЛЬНІЦЫ') %></small><strong><%= Number(totals.schools).toLocaleString('ru-RU') %></strong><div class="metric-foot">ОДНА КОМАНДА</div></article>
+  <article class="planet-metric"><span>🌿</span><small><%= t('ЭПОХА ПЛАНЕТЫ','ЭПОХА ПЛАНЕТЫ') %></small><strong><%= activeStage+1 %><i> / 7</i></strong><div class="metric-foot">НОВЫЙ УРОВЕНЬ РАЗВИТИЯ</div></article>
+ </section>
+ <section class="planet-progress-panel">
+  <div class="planet-progress-top"><div><span class="planet-section-kicker">МИССИЯ: ЗЕЛЁНОЕ БУДУЩЕЕ</span><h2><%= lang==='by'?current.nameBy:current.name %></h2><p><%= lang==='by'?current.descBy:current.desc %></p></div><div class="planet-stage-emblem"><span><%= current.icon %></span><small>УРОВЕНЬ <%= activeStage+1 %></small></div></div>
+  <% if(next){ %>
+   <div class="planet-progress-meta"><span><%= t('ПРОГРЕСС ДО СЛЕДУЮЩЕЙ ЭПОХИ','ПРАГРЭС ДА НАСТУПНАЙ ЭПОХІ') %></span><b><%= Math.round(progress) %>%</b></div>
+   <div class="planet-progress-track"><i style="width:<%= progress %>%"></i><span></span></div>
+   <div class="planet-progress-foot"><span><b><%= Number(totals.kg).toLocaleString('ru-RU') %></b> кг собрано в этой истории</span><span>ЕЩЁ <b><%= Math.max(0,Number(next.kg)-Number(totals.kg)).toLocaleString('ru-RU') %> кг</b> ДО ОТКРЫТИЯ</span></div>
+  <% }else{ %><div class="planet-max-level">✦ ЛЕГЕНДАРНАЯ ЭПОХА ОТКРЫТА! ВЫ СОЗДАЛИ ЭКОПЛАНЕТУ БУДУЩЕГО.</div><% } %>
+ </section>
+ <section class="planet-epochs">
+  <div class="planet-section-heading"><div><span class="planet-section-kicker">КАРТА ЭВОЛЮЦИИ</span><h2>Семь эпох. Одна большая история.</h2><p>Каждый новый рубеж открывается общими усилиями школ.</p></div><span class="planet-epoch-count"><b><%= activeStage+1 %></b> / 7 ОТКРЫТО</span></div>
+  <div class="planet-epoch-grid">
+   <% stages.forEach((stage,i)=>{const unlocked=Number(totals.kg)>=stage.kg;const active=i===activeStage; %>
+   <article class="planet-epoch-card <%= unlocked?'is-open':'is-locked' %> <%= active?'is-current':'' %>">
+    <div class="epoch-card-top"><span class="epoch-number">0<%= i+1 %></span><span class="epoch-status"><%= active?'● ТЕКУЩАЯ':unlocked?'✓ ОТКРЫТА':'ЗАКРЫТА' %></span></div>
+    <div class="epoch-art epoch-art-<%= i %>"><span><%= unlocked?stage.icon:'🔒' %></span><i></i></div>
+    <h3><%= lang==='by'?stage.nameBy:stage.name %></h3><p><%= lang==='by'?stage.descBy:stage.desc %></p>
+    <div class="epoch-requirement"><span>ОБЩИЙ РУБЕЖ</span><b><%= Number(stage.kg).toLocaleString('ru-RU') %> кг</b></div>
+   </article>
+   <% }) %>
+  </div>
+ </section>
+ <section class="planet-creators">
+  <div class="planet-section-heading"><div><span class="planet-section-kicker">СОЗДАТЕЛИ ЭКОПЛАНЕТЫ</span><h2>Команды, которые меняют мир</h2><p>Школы с наибольшим подтверждённым вкладом.</p></div><a href="/ratings">Полный рейтинг ↗</a></div>
+  <div class="planet-team-grid">
+   <% leaders.forEach((school,i)=>{ %><a class="planet-team-card" href="/schools/<%= school.id %>"><span class="team-place"><%= String(i+1).padStart(2,'0') %></span><span class="team-avatar"><%= avatars[school.avatar_code]||'🌱' %></span><span class="team-info"><b><%= school.name %></b><small>КОМАНДА ЭКОРАЙОНА</small></span><strong><%= Number(school.kg).toLocaleString('ru-RU') %><small>кг</small></strong></a><% }) %>
+   <% if(!leaders.length){ %><div class="empty">Школьные команды появятся здесь после подтверждения первых результатов.</div><% } %>
+  </div>
+ </section>
+ <section class="planet-final-cta"><div><span>ТВОЁ ДЕЙСТВИЕ МЕНЯЕТ ПЛАНЕТУ</span><h2>Следующая эпоха начинается с нас.</h2><p>Присоединяйся к экологическим заданиям и помоги открыть новый мир.</p></div><a href="/missions">Начать действовать ↗</a></section>
 </section>
 <%- include('partials/footer') %>

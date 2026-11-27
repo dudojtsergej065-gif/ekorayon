@@ -43,9 +43,17 @@
 </section>
 <section class="eu-section">
  <div class="eu-section-head"><div><span class="eu-eyebrow">02 / ЖИВАЯ ЭКОСЕТЬ</span><h2>Школы района</h2><p>Карта-схема участников и их вклад. Это схема сети, а не географическая карта: точные координаты школ пока не хранятся в системе.</p></div><a class="eu-text-link" href="/schools">Все школы ↗</a></div>
- <div class="eu-network">
-  <div class="eu-network-core"><span>🌍</span><b>ЭКОРАЙОН</b><small>ОДНА КОМАНДА</small></div>
-  <div class="eu-school-nodes"><% schools.forEach((s,i)=>{ %><a class="eu-school-node" href="/schools/<%= s.id %>"><span class="eu-node-icon"><%= ['🌱','🌳','♻️','🌿','🏫'][i%5] %></span><span><b><%= s.name %></b><small><%= s.locality||s.address||'Школа-участник' %></small></span><strong><%= Number(s.kg).toLocaleString('ru-RU') %> кг</strong></a><% }) %><% if(!schools.length){ %><p>Школы появятся здесь после подключения к платформе.</p><% } %></div>
+ <div class="eu-map-shell">
+  <div class="eu-map-toolbar"><span><i></i> СЕТЬ УЧАСТНИКОВ / В РЕАЛЬНОМ ВРЕМЕНИ</span><b><%= schools.length %> ШКОЛ</b></div>
+  <div class="eu-map-canvas" id="euMapCanvas">
+   <svg class="eu-map-lines" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="euLineGlow"><stop stop-color="#54d99b" stop-opacity=".05"/><stop offset=".5" stop-color="#8af0b8" stop-opacity=".8"/><stop offset="1" stop-color="#54d99b" stop-opacity=".05"/></linearGradient></defs><path d="M500 280 L170 105 M500 280 L390 90 M500 280 L720 105 M500 280 L850 250 M500 280 L760 455 M500 280 L360 465 M500 280 L130 330" stroke="url(#euLineGlow)" stroke-width="2" fill="none" stroke-dasharray="7 9"/><circle cx="500" cy="280" r="115" fill="none" stroke="#75e8ad" stroke-opacity=".15" stroke-dasharray="3 9"/><circle cx="500" cy="280" r="185" fill="none" stroke="#75e8ad" stroke-opacity=".1" stroke-dasharray="2 12"/></svg>
+   <div class="eu-map-hub"><span>🌍</span><b>ЭКОРАЙОН</b><small>ЕДИНАЯ ЭКОСЕТЬ</small><i></i></div>
+   <% schools.forEach((s,i)=>{ %><button type="button" class="eu-map-node" style="--node-index:<%= i %>" data-name="<%= String(s.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>" data-place="<%= String(s.locality||s.address||'Школа-участник').replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>" data-kg="<%= Number(s.kg||0).toLocaleString('ru-RU') %>" data-url="/schools/<%= s.id %>"><span><%= ['🌱','🌳','♻️','🌿','🏫'][i%5] %></span><b><%= s.name %></b><small><%= Number(s.kg).toLocaleString('ru-RU') %> кг</small></button><% }) %>
+   <% if(!schools.length){ %><div class="eu-map-empty">🌱<br>Школы появятся здесь после подключения к платформе.</div><% } %>
+   <div class="eu-map-scan"></div>
+  </div>
+  <div class="eu-map-detail" id="euMapDetail"><span>✦</span><div><b>Выбери школу на карте</b><small>Нажми на узел, чтобы увидеть её вклад в экологическую сеть.</small></div><a href="/schools">Все школы ↗</a></div>
+  <div class="eu-map-legend"><span><i></i> Школа-участник</span><span><i></i> Центр экосети</span><span>Данные обновляются вместе с платформой</span></div>
  </div>
 </section>
 <section class="eu-section">
@@ -63,10 +71,56 @@
  <div class="eu-section-head"><div><span class="eu-eyebrow">05 / ДОСТИЖЕНИЯ РАЙОНА</span><h2>Галерея наград</h2><p>Награды открываются за реальные экологические результаты школ.</p></div><a class="eu-text-link" href="/achievements">Все достижения ↗</a></div>
  <div class="eu-awards"><% achievements.forEach(a=>{ %><article><span><%= a.icon %></span><div><b><%= lang==='by'?a.title_by:a.title_ru %></b><small><%= lang==='by'?a.description_by:a.description_ru %></small></div><strong><%= a.earned_count %></strong></article><% }) %></div>
 </section>
-<section class="eu-admin-panel">
- <div><span class="eu-eyebrow">06 / УПРАВЛЕНИЕ РАЙОНОМ</span><h2>Центр управления</h2><p>Инструменты для команды администрации: школы, баллы, задания, новости и контроль результатов.</p></div>
- <% if(user&&['admin','staff'].includes(user.role)){ %><div class="eu-admin-links"><a href="/dashboard">Панель администрации ↗</a><a href="/admin/schools">Управление школами ↗</a><a href="/admin/points">Настройка баллов ↗</a><a href="/admin/missions">Управление заданиями ↗</a><a href="/admin/audit">Журнал действий ↗</a></div><% }else{ %><a class="eu-admin-login" href="/login">Вход для администрации ↗</a><% } %>
+<section class="eu-section eu-command-section">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">06 / DIGITAL COMMAND</span><h2>Пульт управления районом</h2><p>Ключевые показатели экологической активности — на одном экране.</p></div><button class="eu-presentation-btn" id="euPresentation" type="button">⛶ Режим презентации</button></div>
+ <div class="eu-command-grid">
+  <article class="eu-command-main"><div class="eu-command-top"><span>🌐 ОБЩИЙ ЭКОПУЛЬС</span><i>АКТИВНО</i></div><div class="eu-command-number"><%= Number(totals.kg).toLocaleString('ru-RU') %><small>кг</small></div><p>Подтверждённый вклад школ в экологию района</p><div class="eu-command-bars"><span style="--bar:92%"></span><span style="--bar:67%"></span><span style="--bar:82%"></span><span style="--bar:55%"></span><span style="--bar:100%"></span><span style="--bar:74%"></span><span style="--bar:88%"></span><span style="--bar:61%"></span><span style="--bar:95%"></span><span style="--bar:70%"></span><span style="--bar:84%"></span><span style="--bar:58%"></span></div><small class="eu-command-foot">Визуальный индикатор сети · без выдуманной динамики по датам</small></article>
+  <div class="eu-command-side"><article><span>🏫</span><div><small>ШКОЛЫ В СЕТИ</small><b><%= totals.schools %></b></div><i>↗</i></article><article><span>⚡</span><div><small>ЭКО-БАЛЛЫ</small><b><%= Number(totals.points).toLocaleString('ru-RU') %></b></div><i>✦</i></article><article><span>🏆</span><div><small>НАГРАДЫ</small><b><%= totals.badges %></b></div><i>✦</i></article></div>
+ </div>
+ <div class="eu-admin-panel"><div><span class="eu-eyebrow">07 / АДМИНИСТРИРОВАНИЕ</span><h2>Инструменты команды</h2><p>Управление школами, баллами, заданиями, новостями и проверкой результатов.</p></div>
+ <% if(user&&['admin','staff'].includes(user.role)){ %><div class="eu-admin-links"><a href="/dashboard">Панель администрации ↗</a><a href="/admin/schools">Управление школами ↗</a><a href="/admin/points">Настройка баллов ↗</a><a href="/admin/missions">Управление заданиями ↗</a><a href="/admin/audit">Журнал действий ↗</a></div><% }else{ %><a class="eu-admin-login" href="/login">Вход для администрации ↗</a><% } %></div>
 </section>
+<style>
+.eu-map-shell{overflow:hidden;border:1px solid #65dca044;border-radius:24px;background:linear-gradient(145deg,#071d20,#0a2928 55%,#0b1c28);box-shadow:0 24px 70px #0005}
+.eu-map-toolbar{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid #8cebb71c;color:#a8d7bf;font-size:10px;font-weight:900;letter-spacing:1.5px}
+.eu-map-toolbar span{display:flex;align-items:center;gap:9px}.eu-map-toolbar span i,.eu-map-legend span:first-child i{width:7px;height:7px;border-radius:50%;background:#76f0aa;box-shadow:0 0 12px #76f0aa;display:inline-block}.eu-map-toolbar b{color:#8df2b8}
+.eu-map-canvas{position:relative;min-height:520px;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#1a5042 0,#10352f 27%,#0b2427 60%,#081b21 100%)}
+.eu-map-canvas:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#75e8ad0b 1px,transparent 1px),linear-gradient(90deg,#75e8ad0b 1px,transparent 1px);background-size:35px 35px;mask-image:radial-gradient(ellipse,#000 20%,transparent 85%)}
+.eu-map-lines{position:absolute;inset:0;width:100%;height:100%;opacity:.8}
+.eu-map-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150px;height:150px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:radial-gradient(circle,#236e51,#0b302c 72%);border:1px solid #8df2b888;box-shadow:0 0 0 12px #65e9a00c,0 0 0 30px #65e9a008,0 0 55px #4de59b55;z-index:2}
+.eu-map-hub span{font-size:38px;filter:drop-shadow(0 0 12px #7fffb4)}.eu-map-hub b{font-size:13px;letter-spacing:2px;color:#edfff5}.eu-map-hub small{font-size:8px;letter-spacing:1.6px;color:#91e7b5}.eu-map-hub i{position:absolute;inset:-9px;border:1px solid #81edb466;border-radius:50%;animation:euMapPulse 3s ease-out infinite}
+.eu-map-node{position:absolute;z-index:3;left:calc(50% + var(--node-x,0px));top:calc(50% + var(--node-y,0px));transform:translate(-50%,-50%);width:min(190px,24%);min-height:74px;padding:10px 12px;display:grid;grid-template-columns:30px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;border:1px solid #79e7b45c;border-radius:14px;background:linear-gradient(145deg,#153b34f2,#0c2727f5);color:#effff5;box-shadow:0 8px 25px #0005;cursor:pointer;transition:transform .25s,border-color .25s,box-shadow .25s}
+.eu-map-node:nth-of-type(1){--node-x:-34vw;--node-y:-165px}.eu-map-node:nth-of-type(2){--node-x:-14vw;--node-y:-205px}.eu-map-node:nth-of-type(3){--node-x:14vw;--node-y:-205px}.eu-map-node:nth-of-type(4){--node-x:34vw;--node-y:-45px}.eu-map-node:nth-of-type(5){--node-x:24vw;--node-y:170px}.eu-map-node:nth-of-type(6){--node-x:-14vw;--node-y:190px}.eu-map-node:nth-of-type(7){--node-x:-34vw;--node-y:55px}
+.eu-map-node:hover,.eu-map-node.active{transform:translate(-50%,-50%) scale(1.055);border-color:#9affc2;box-shadow:0 0 0 3px #79e7b422,0 12px 32px #0007,0 0 25px #4de59b22}
+.eu-map-node>span{grid-row:1/3;font-size:24px}.eu-map-node b{font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.eu-map-node small{color:#8fe8b4;font-size:9px;font-weight:850}
+.eu-map-empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#b9e8cf;line-height:2}.eu-map-scan{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 48%,#75e8ad0c 50%,transparent 52%);background-size:100% 160px;animation:euScan 8s linear infinite}
+.eu-map-detail{display:flex;align-items:center;gap:14px;padding:16px 20px;border-top:1px solid #8cebb71c;background:#0a201f}.eu-map-detail>span{font-size:25px;color:#8df2b8}.eu-map-detail div{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}.eu-map-detail b{font-size:12px;color:#edfff5}.eu-map-detail small{font-size:10px;color:#9ebcaf}.eu-map-detail a{font-size:10px;font-weight:900;color:#8df2b8;text-decoration:none}.eu-map-legend{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid #8cebb714;color:#769b8a;font-size:9px}.eu-map-legend span{display:flex;align-items:center;gap:7px}.eu-map-legend span:nth-child(2) i{width:8px;height:8px;border:1px solid #8df2b8;border-radius:50%;box-shadow:0 0 10px #8df2b8}
+.eu-presentation-btn{padding:10px 14px;border:1px solid #79e7b455;border-radius:999px;background:#13382e;color:#bfffd8;font:inherit;font-size:10px;font-weight:900;cursor:pointer}.eu-command-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}.eu-command-main{position:relative;overflow:hidden;min-height:230px;padding:23px;border:1px solid #77e7ac38;border-radius:20px;background:radial-gradient(ellipse at 85% 20%,#2b8b5a55,transparent 40%),linear-gradient(145deg,#0e3029,#091d22);color:#effff5}.eu-command-top{display:flex;justify-content:space-between;align-items:center;color:#9dcbb1;font-size:9px;font-weight:950;letter-spacing:1.5px}.eu-command-top i{font-style:normal;color:#8df2b8}.eu-command-number{margin:17px 0 0;font-size:clamp(38px,5vw,58px);font-weight:950;letter-spacing:-3px;color:#eafff3}.eu-command-number small{font-size:18px;color:#8df2b8;margin-left:8px;letter-spacing:0}.eu-command-main p{margin:2px 0;color:#a6c8b7;font-size:11px}.eu-command-bars{height:45px;display:flex;align-items:flex-end;gap:7px;margin-top:18px}.eu-command-bars span{flex:1;height:var(--bar);border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,#b2ffb6,#35bd83);opacity:.75;animation:euBarGlow 2.8s ease-in-out infinite alternate}.eu-command-bars span:nth-child(2n){animation-delay:-1s}.eu-command-foot{display:block;margin-top:10px;color:#759c89;font-size:8px}
+.eu-command-side{display:grid;gap:10px}.eu-command-side article{display:flex;align-items:center;gap:14px;padding:15px 17px;border:1px solid #75dfa638;border-radius:17px;background:linear-gradient(130deg,#14392f,#0b2424);color:#eafff4}.eu-command-side article>span{font-size:27px}.eu-command-side article div{display:flex;flex-direction:column;gap:4px;flex:1}.eu-command-side article small{font-size:8px;letter-spacing:1.2px;color:#9abbaa}.eu-command-side article b{font-size:23px;color:#9af0b9}.eu-command-side article>i{font-style:normal;color:#8df2b8}
+.eu-command-section .eu-admin-panel{margin:16px 0 0}
+@keyframes euMapPulse{0%{transform:scale(.92);opacity:.8}100%{transform:scale(1.18);opacity:0}}@keyframes euScan{0%{background-position:0 -160px}100%{background-position:0 560px}}@keyframes euBarGlow{from{filter:brightness(.75)}to{filter:brightness(1.25)}}
+@media(max-width:760px){.eu-map-canvas{min-height:620px}.eu-map-hub{width:112px;height:112px}.eu-map-hub span{font-size:28px}.eu-map-node{width:min(155px,42%);min-height:65px;padding:8px}.eu-map-node:nth-of-type(1){--node-x:-24vw;--node-y:-225px}.eu-map-node:nth-of-type(2){--node-x:24vw;--node-y:-225px}.eu-map-node:nth-of-type(3){--node-x:-24vw;--node-y:-125px}.eu-map-node:nth-of-type(4){--node-x:24vw;--node-y:-125px}.eu-map-node:nth-of-type(5){--node-x:24vw;--node-y:125px}.eu-map-node:nth-of-type(6){--node-x:-24vw;--node-y:125px}.eu-map-node:nth-of-type(7){--node-x:0;--node-y:225px}.eu-map-detail{align-items:flex-start;flex-wrap:wrap}.eu-map-detail a{margin-left:39px}.eu-command-grid{grid-template-columns:1fr}.eu-presentation-btn{white-space:nowrap}.eu-command-side{grid-template-columns:repeat(3,minmax(0,1fr))}.eu-command-side article{padding:11px 8px;gap:6px;flex-direction:column;align-items:flex-start}.eu-command-side article b{font-size:17px}.eu-command-side article>i{display:none}}
+@media(max-width:420px){.eu-map-node{width:43%;grid-template-columns:24px 1fr}.eu-map-node>span{font-size:19px}.eu-map-node b{font-size:9px}.eu-map-node small{font-size:8px}.eu-command-side{grid-template-columns:1fr}.eu-command-side article{flex-direction:row;align-items:center}.eu-map-toolbar{font-size:8px;padding:12px}}
+@media(prefers-reduced-motion:reduce){.eu-map-hub i,.eu-map-scan,.eu-command-bars span{animation:none!important}}
+</style>
+<script>
+(()=>{
+ const detail=document.getElementById('euMapDetail');
+ document.querySelectorAll('.eu-map-node').forEach(node=>node.addEventListener('click',()=>{
+  document.querySelectorAll('.eu-map-node').forEach(n=>n.classList.remove('active'));
+  node.classList.add('active');
+  detail.innerHTML='<span>✦</span><div><b></b><small></small></div><a></a>';
+  detail.querySelector('b').textContent=node.dataset.name;
+  detail.querySelector('small').textContent=node.dataset.place+' · '+node.dataset.kg+' кг подтверждённого сбора';
+  const link=detail.querySelector('a');link.href=node.dataset.url;link.textContent='Профиль школы ↗';
+ }));
+ const presentation=document.getElementById('euPresentation');
+ if(presentation)presentation.addEventListener('click',async()=>{
+  try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();presentation.textContent='✕ Выйти из презентации'}else{await document.exitFullscreen();presentation.textContent='⛶ Режим презентации'}}catch{presentation.textContent='Полный экран недоступен'};
+ });
+ document.addEventListener('fullscreenchange',()=>{if(presentation&&!document.fullscreenElement)presentation.textContent='⛶ Режим презентации'});
+})();
+</script>
 <script>
 (()=>{
  const questions=[

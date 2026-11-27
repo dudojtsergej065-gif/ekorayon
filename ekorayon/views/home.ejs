@@ -3,6 +3,28 @@
 <section class="home-hero">
   <div class="hero-orbit orbit-a"></div><div class="hero-orbit orbit-b"></div>
   <div class="hero-copy home-hero-copy">
+    <div class="home-time-greeting" aria-live="polite">
+      <span class="home-time-icon" id="homeTimeIcon" aria-hidden="true">☀️</span>
+      <span><strong id="homeTimeGreeting">Добрый день!</strong><small>Рады видеть тебя в ЭКОРАЙОН</small></span>
+    </div>
+    <script>
+      (() => {
+        const greeting = document.getElementById('homeTimeGreeting');
+        const icon = document.getElementById('homeTimeIcon');
+        if (!greeting || !icon) return;
+        const updateGreeting = () => {
+          const hour = new Date().getHours();
+          let message = 'Доброй ночи!', symbol = '🌙';
+          if (hour >= 5 && hour < 12) { message = 'Доброе утро!'; symbol = '🌅'; }
+          else if (hour >= 12 && hour < 18) { message = 'Добрый день!'; symbol = '☀️'; }
+          else if (hour >= 18 && hour < 23) { message = 'Добрый вечер!'; symbol = '🌆'; }
+          greeting.textContent = message;
+          icon.textContent = symbol;
+        };
+        updateGreeting();
+        window.setInterval(updateGreeting, 60000);
+      })();
+    </script>
     <span class="hero-kicker"><span class="live-dot"></span> <%= t('ЭКОЛОГИЧЕСКОЕ ДВИЖЕНИЕ ТВОЕГО РАЙОНА','ЭКАЛАГІЧНЫ РУХ ТВАЙГО РАЁНА') %></span>
     <h1><%= t('МЕНЯЙ МИР.','МЯНЯЙ СВЕТ.') %><br><span><%= t('НАЧНИ СО СВОЕЙ','ПАЧНІ СА СВАЁЙ') %></span><br><em><%= t('ШКОЛЫ.','ШКОЛЫ.') %></em></h1>
     <p><%= t('Собирай вторсырьё, участвуй в экоакциях, открывай достижения и помогай своему району становиться чище.','Збірай другасную сыравіну, удзельнічай у экаакцыях, адкрывай дасягненні і дапамагай свайму раёну станавіцца чысцейшым.') %></p>

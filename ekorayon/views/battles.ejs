@@ -5,4 +5,35 @@
  <section class="panel battle-ranking"><div class="section-head"><h2>⚡ <%= t('Турнирная таблица','Турнірная табліца') %></h2><span><%= t('Считаем только текущий месяц','Лічым толькі бягучы месяц') %></span></div><div class="hall-list"><% schools.forEach((s,i)=>{const avatars={sprout:'🌱',fox:'🦊',owl:'🦉',wolf:'🐺',dragon:'🐉',phoenix:'🔥'};%><div class="hall-row"><span class="hall-rank"><%= i+1 %></span><span class="world-team-avatar"><%= avatars[s.avatar_code]||'🌱' %></span><b><%= s.name %></b><strong><%= Number(s.kg).toLocaleString('ru-RU') %> кг</strong><small>⭐ <%= Number(s.points).toLocaleString('ru-RU') %></small></div><% }) %></div></section>
  <p class="battle-note"><%= t('Рейтинг обновляется после проверки администрацией. Это дружеское соревнование: главное — общий вклад в природу!','Рэйтынг абнаўляецца пасля праверкі адміністрацыяй. Гэта сяброўскае спаборніцтва: галоўнае — агульны ўклад у прыроду!') %></p>
 </section>
+<section class="arena-quiz" id="arenaQuiz">
+ <div class="arena-quiz-head"><div><span class="eyebrow">МИНИ-ИГРА · 5 РАУНДОВ</span><h2>ЭКОБЛИЦ <em>АРЕНЫ</em></h2><p>Проверь знания, собери личный результат и попробуй улучшить его. Баллы викторины не влияют на школьный рейтинг.</p></div><div class="arena-score-orb"><b id="arenaScore">0</b><small>ОЧКОВ</small></div></div>
+ <div class="arena-quiz-progress"><span id="arenaQuizProgress"></span></div>
+ <div class="arena-quiz-meta"><span id="arenaQuestionCount">ВОПРОС 1 ИЗ 5</span><span id="arenaQuizFeedback">ВЫБЕРИ ОТВЕТ</span></div>
+ <h3 id="arenaQuestion">Как лучше поступить с чистой бумажной упаковкой?</h3>
+ <div class="arena-answers" id="arenaAnswers">
+  <button type="button" data-answer="0">Сдать отдельно, если её принимают по местным правилам</button>
+  <button type="button" data-answer="1">Смешать с пищевыми отходами</button>
+  <button type="button" data-answer="2">Оставить на улице</button>
+ </div>
+ <div class="arena-quiz-bottom"><span id="arenaQuizHint">Подсказка: правила приёма могут различаться в разных населённых пунктах.</span><button type="button" class="btn primary" id="arenaNext" disabled>Следующий вопрос →</button></div>
+ <div class="arena-quiz-result" id="arenaQuizResult" hidden><span>🏆</span><h3 id="arenaResultTitle">Отличная работа!</h3><p id="arenaResultText"></p><button type="button" class="btn primary" id="arenaRestart">Сыграть ещё раз ↻</button></div>
+</section>
+<script>
+(()=>{const root=document.getElementById('arenaQuiz');if(!root)return;
+const questions=[
+ {q:'Как лучше поступить с чистой бумажной упаковкой?',a:['Сдать отдельно, если её принимают по местным правилам','Смешать с пищевыми отходами','Оставить на улице'],c:0,h:'Правила приёма могут различаться в разных населённых пунктах.'},
+ {q:'Почему многоразовая бутылка может быть полезной привычкой?',a:['Она помогает сократить одноразовую упаковку','Она сама очищает воду','Её никогда не нужно мыть'],c:0,h:'Повторное использование помогает уменьшать количество отходов.'},
+ {q:'Что важно сделать перед сдачей пластиковой упаковки?',a:['Проверить правила пункта приёма и опорожнить тару','Спрятать маркировку','Смешать все виды пластика'],c:0,h:'Не вся упаковка принимается одинаково — ориентируйся на маркировку и местные правила.'},
+ {q:'Куда следует сдавать батарейки?',a:['В специальные пункты сбора','В контейнер для бумаги','В обычную корзину для смешанных отходов'],c:0,h:'Батарейки собирают отдельно. Не разбирай их самостоятельно.'},
+ {q:'Что лучше сделать с вещью, которая ещё пригодна к использованию?',a:['По возможности отремонтировать, обменять или передать','Сразу выбросить','Оставить рядом с контейнером'],c:0,h:'Продление срока службы вещей помогает сокращать отходы.'}
+];
+let index=0,score=0,locked=false;
+const $=id=>document.getElementById(id);
+function render(){const q=questions[index];locked=false;$('arenaQuestion').textContent=q.q;$('arenaQuestionCount').textContent='ВОПРОС '+(index+1)+' ИЗ '+questions.length;$('arenaQuizFeedback').textContent='ВЫБЕРИ ОТВЕТ';$('arenaQuizHint').textContent=q.h;$('arenaQuizProgress').style.width=(index/questions.length*100)+'%';$('arenaNext').disabled=true;$('arenaNext').textContent=index===questions.length-1?'Показать результат →':'Следующий вопрос →';$('arenaAnswers').innerHTML=q.a.map((a,i)=>'<button type="button" data-answer="'+i+'">'+a+'</button>').join('');}
+$('arenaAnswers').addEventListener('click',e=>{const btn=e.target.closest('button[data-answer]');if(!btn||locked)return;locked=true;const correct=Number(btn.dataset.answer)===questions[index].c;if(correct){score+=20;$('arenaQuizFeedback').textContent='ВЕРНО · +20';}else{$('arenaQuizFeedback').textContent='ПОПРОБУЙ ЗАПОМНИТЬ';} $('arenaScore').textContent=score;[...$('arenaAnswers').children].forEach((el,i)=>{el.disabled=true;if(i===questions[index].c)el.classList.add('is-correct');else if(i===Number(btn.dataset.answer))el.classList.add('is-wrong');});$('arenaQuizProgress').style.width=((index+1)/questions.length*100)+'%';$('arenaNext').disabled=false;});
+$('arenaNext').addEventListener('click',()=>{if(!locked)return;if(index<questions.length-1){index++;render();return;}$('arenaQuestion').hidden=true;$('arenaAnswers').hidden=true;$('arenaQuizMeta').hidden=true;$('arenaQuizBottom').hidden=true;$('arenaQuizResult').hidden=false;$('arenaResultTitle').textContent=score===100?'Экоэксперт! 🌟':score>=60?'Отличный результат! 🌿':'Хорошее начало! 🌱';$('arenaResultText').textContent='Твой результат: '+score+' из 100 очков. Это личный результат викторины — он не изменяет рейтинг школы.';});
+$('arenaRestart').addEventListener('click',()=>{index=0;score=0;$('arenaScore').textContent='0';$('arenaQuestion').hidden=false;$('arenaAnswers').hidden=false;$('arenaQuizMeta').hidden=false;$('arenaQuizBottom').hidden=false;$('arenaQuizResult').hidden=true;render();});
+render();
+})();
+</script>
 <%- include('partials/footer') %>

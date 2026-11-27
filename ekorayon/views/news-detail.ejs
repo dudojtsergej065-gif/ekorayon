@@ -1,0 +1,1 @@
+<%- include('partials/header') %><article class="prose"><span class="eyebrow"><%= item.category %></span><h1><%= item.title %></h1><small><%= new Date(item.created_at).toLocaleDateString('ru-RU') %> <% if(item.school_name){ %>· <%= item.school_name %><% } %></small><p><%= item.body %></p></article><%- include('partials/footer') %>

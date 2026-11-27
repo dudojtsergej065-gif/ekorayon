@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 <section class="page-head"><span class="eyebrow">ОБСЛУЖИВАНИЕ ПЛАТФОРМЫ</span><h1>Очистка тестовых данных</h1><p>Удаление тестовых школ, результатов, новостей и заданий, добавленных через административную панель.</p></section>
 <section class="panel" style="max-width:820px;margin:0 auto 28px">
-<h2>Будут удалены</h2>
+<% if(preview.completed){ %><div class="notice success"><h2>Очистка уже выполнена</h2><p>Повторный запуск заблокирован. Новые данные не будут затронуты.</p></div><% }else{ %><h2>Будут удалены</h2>
 <div class="stats-grid">
 <div class="stat"><span>Школы</span><strong><%= preview.schools %></strong></div>
 <div class="stat"><span>Записи о вторсырье</span><strong><%= preview.entries %></strong></div>
@@ -15,4 +15,4 @@
 <label>Для подтверждения введи слово ОЧИСТИТЬ<input name="confirm" required autocomplete="off" placeholder="ОЧИСТИТЬ" pattern="ОЧИСТИТЬ"></label>
 <button class="btn danger" type="submit">Удалить тестовые данные</button></form>
 <p class="muted" style="margin-top:14px">Операция выполняется одной транзакцией: если возникнет ошибка, изменения будут отменены.</p>
-</section><%- include('partials/footer') %>
+<% } %></section><%- include('partials/footer') %>

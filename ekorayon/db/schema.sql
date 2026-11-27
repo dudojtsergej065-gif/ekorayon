@@ -246,3 +246,13 @@ CREATE TABLE IF NOT EXISTS mission_submissions (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
  UNIQUE(mission_id,school_id)
 );
+
+-- Начислить исторические значки школам по уже подтверждённым результатам.
+INSERT INTO school_achievements(school_id,achievement_id)
+SELECT s.id,a.id
+FROM schools s
+JOIN eco_achievements a ON a.threshold_kg <= (
+ SELECT COALESCE(SUM(e.quantity),0) FROM collection_entries e
+ WHERE e.school_id=s.id AND e.status='approved'
+)
+ON CONFLICT(school_id,achievement_id) DO NOTHING;

@@ -256,3 +256,14 @@ JOIN eco_achievements a ON a.threshold_kg <= (
  WHERE e.school_id=s.id AND e.status='approved'
 )
 ON CONFLICT(school_id,achievement_id) DO NOTHING;
+
+-- Виртуальный мир, командные аватары и расширенные секретные достижения.
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS avatar_code TEXT NOT NULL DEFAULT 'sprout';
+ALTER TABLE eco_achievements ADD COLUMN IF NOT EXISTS threshold_points INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE eco_achievements ADD COLUMN IF NOT EXISTS threshold_missions INTEGER NOT NULL DEFAULT 0;
+INSERT INTO eco_achievements(code,title_ru,title_by,description_ru,description_by,icon,threshold_kg,threshold_points,threshold_missions) VALUES
+ ('mission-starter','Мастер заданий','Майстар заданняў','Выполнено первое экозадание','Выканана першае эказаданне','🧭',0,0,1),
+ ('eco-influencer','Эко-вдохновение','Эка-натхненне','Набрано 100 мотивационных баллов','Набрана 100 матывацыйных балаў','💡',0,100,0),
+ ('mission-hero','Герой миссий','Герой місій','Выполнено 5 экозаданий','Выканана 5 эказаданняў','🚀',0,0,5),
+ ('legend-of-green','Легенда зелёного мира','Легенда зялёнага свету','Набрано 500 мотивационных баллов','Набрана 500 матывацыйных балаў','🌟',0,500,0)
+ON CONFLICT(code) DO NOTHING;

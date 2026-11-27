@@ -55,6 +55,32 @@
   <div class="stat stat-mission"><span class="stat-icon">🌍</span><span>Наша миссия</span><strong>0 <small>отходов</small></strong><i>Больше заботы о планете</i></div>
 </section>
 
+<section class="home-quickstart">
+ <div class="home-quickstart-head"><div><span class="eyebrow">ТВОЯ ЭКОИСТОРИЯ НАЧИНАЕТСЯ ЗДЕСЬ</span><h2>Открой <em>возможности</em> ЭКОРАЙОНА</h2><p>Не ограничивайся одним разделом. Здесь можно исследовать, создавать, соревноваться и видеть реальные результаты.</p></div><span class="home-quickstart-orbit">✳</span></div>
+ <div class="home-feature-grid">
+  <a class="home-feature-card feature-world" href="/eco-world"><span class="home-feature-icon">🌍</span><small>ТВОЯ ЭКОСИСТЕМА</small><b>ЭКОМИР</b><p>Эко-паспорт, виртуальный сад, уровни и достижения.</p><i>Исследовать мир ↗</i><span class="home-feature-glow"></span></a>
+  <a class="home-feature-card feature-city" href="/city-builder"><span class="home-feature-icon">🏙️</span><small>ТВОРЧЕСКАЯ МАСТЕРСКАЯ</small><b>Город будущего</b><p>Построй экологичный район и проверь свои идеи.</p><i>Начать строительство ↗</i><span class="home-feature-glow"></span></a>
+  <a class="home-feature-card feature-missions" href="/missions"><span class="home-feature-icon">⚡</span><small>ДЕЙСТВУЙ И МЕНЯЙ</small><b>Эко-задания</b><p>Выполняй полезные задания и участвуй в жизни проекта.</p><i>Выбрать задание ↗</i><span class="home-feature-glow"></span></a>
+  <a class="home-feature-card feature-awards" href="/achievements"><span class="home-feature-icon">🏆</span><small>ТВОИ ПОБЕДЫ</small><b>Достижения</b><p>Открывай награды за вклад в экологическое движение.</p><i>Посмотреть награды ↗</i><span class="home-feature-glow"></span></a>
+  <a class="home-feature-card feature-battles" href="/battles"><span class="home-feature-icon">🔥</span><small>КОМАНДНЫЙ ДУХ</small><b>Эко-баттлы</b><p>Следи за соревнованиями и поддерживай свою команду.</p><i>На арену ↗</i><span class="home-feature-glow"></span></a>
+  <a class="home-feature-card feature-schools" href="/schools"><span class="home-feature-icon">🏫</span><small>ЕДИНАЯ СЕТЬ</small><b>Школы района</b><p>Знакомься с участниками и их экологическими результатами.</p><i>Найти школу ↗</i><span class="home-feature-glow"></span></a>
+ </div>
+ <div class="home-idea-box"><div><span>💡 ИДЕЯ ДЛЯ ДОБРОГО ДЕЛА</span><b id="homeEcoIdea">Начни с маленького шага — он тоже имеет значение.</b><small>Небольшие привычки помогают заботиться об окружающей среде каждый день.</small></div><button type="button" id="homeEcoIdeaButton">Другая идея ↻</button></div>
+</section>
+
+<section class="home-journey">
+ <div class="home-journey-title"><span class="eyebrow">ПРОСТО НАЧАТЬ</span><h2>Твой путь в <em>ЭКОРАЙОНЕ</em></h2><p>Четыре шага, которые помогут включиться в общее движение.</p></div>
+ <div class="home-journey-steps">
+  <article><span>01</span><i>🏫</i><b>Найди свою школу</b><small>Узнай, участвует ли твоя команда в проекте.</small></article>
+  <article><span>02</span><i>♻️</i><b>Выбери полезное дело</b><small>Сортируй вторсырьё и участвуй в экологических инициативах.</small></article>
+  <article><span>03</span><i>📊</i><b>Следи за результатом</b><small>Смотри подтверждённые показатели и новости района.</small></article>
+  <article><span>04</span><i>🌱</i><b>Вдохновляй других</b><small>Делись идеями и помогай своей команде расти.</small></article>
+ </div>
+</section>
+<script>
+(()=>{const ideas=['Используй многоразовую бутылку вместо одноразовой.','Перед сортировкой проверь, какие материалы принимает пункт сбора.','Дай вещам вторую жизнь: отремонтируй, обменяй или передай тому, кому они нужны.','Выключай свет и технику, когда они не используются.','Попробуй пройти короткий маршрут пешком или на велосипеде, если это безопасно.','Расскажи одноклассникам об одном простом способе сократить отходы.','Используй обе стороны листа бумаги для черновиков.'];const out=document.getElementById('homeEcoIdea'),btn=document.getElementById('homeEcoIdeaButton');if(!out||!btn)return;let last=-1;btn.addEventListener('click',()=>{let n;do{n=Math.floor(Math.random()*ideas.length)}while(n===last);last=n;out.classList.remove('idea-pop');void out.offsetWidth;out.textContent=ideas[n];out.classList.add('idea-pop')})})();
+</script>
+
 <section class="home-pulse-preview">
   <div class="home-pulse-intro"><span class="eyebrow">◉ ЖИВАЯ ЛЕНТА РАЙОНА</span><h2>Пульс <em>ЭКОРАЙОНА</em></h2><p>Реальные события, подтверждённые результаты и достижения школ — всё в одном месте.</p><a class="btn primary" href="/pulse">Открыть пульс района ↗</a></div>
   <div class="home-pulse-list"><% if(pulseEvents.length){ pulseEvents.forEach((event)=>{ %><a class="home-pulse-item" href="<%= event.url %>"><span class="home-pulse-icon"><%= ({collection:'♻',mission:'⚡',achievement:'🏆',news:'📣'})[event.kind]||'🌱' %></span><span><b><%= event.title %></b><small><%= event.school_name %> · <%= new Date(event.happened_at).toLocaleDateString('ru-RU') %></small></span><i>↗</i></a><% }) }else{ %><div class="home-pulse-empty">Первые события появятся после подтверждения результатов школ.</div><% } %></div>

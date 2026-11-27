@@ -148,3 +148,18 @@ button,.btn,.login-link{transition:transform .2s,box-shadow .2s,filter .2s}butto
 .eco-level-track span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#6bdc91,#d7ff70);box-shadow:0 0 16px #91f3a866;transition:width .5s ease}
 .eco-level-card p{margin:12px 0 5px;color:#c5e8d5;font-size:13px}
 .eco-level-card small{color:#8fbea7;font-size:11px}
+
+
+/* Расширенные информационные разделы */
+.prose{max-width:1080px;padding:12px 0 90px}
+.prose-intro,.form-intro{max-width:850px;color:#526158;font-size:17px;line-height:1.85;margin:0 0 26px}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0 36px}
+.info-card{position:relative;padding:23px 24px 22px;border:1px solid #dfe8df;border-radius:18px;background:linear-gradient(145deg,#fff,#f6faf5);box-shadow:0 8px 24px #173c2810}
+.info-card h2{margin:8px 0 9px;color:#174b36;font-size:19px}
+.info-card p{margin:0;color:#526158;font-size:14px;line-height:1.85}
+.info-number{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:11px;background:#e4f2e7;color:#28734c;font-size:11px;font-weight:800;letter-spacing:.08em}
+.form-intro{margin:10px 0 20px}
+.registration-steps,.feedback-topics{margin:20px 0 26px}
+.registration-steps .info-card,.feedback-topics .info-card{padding:18px}
+.form-footnote{margin:14px 2px 0;color:#758078;font-size:11px;line-height:1.8}
+@media(max-width:700px){.info-grid{grid-template-columns:1fr}.prose-intro,.form-intro{font-size:15px}.info-card{padding:19px}}

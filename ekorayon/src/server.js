@@ -131,14 +131,15 @@ app.get('/health',(req,res)=>res.json({ok:true,service:'ЭКОРАЙОН'}));
 app.get('/language/:lang',(req,res)=>{ if(['ru','by'].includes(req.params.lang)) req.session.lang=req.params.lang; res.redirect('back'); });
 app.get('/', async (req,res,next)=>{
  try {
-  const [totals, schools, classes, leaders, news] = await Promise.all([
+  const [totals, schools, classes, leaders, news, pulseEvents] = await Promise.all([
    query(`SELECT COALESCE(SUM(quantity),0)::numeric(14,2) total FROM collection_entries WHERE status IN ('pending','approved') AND (SELECT status FROM schools WHERE id=school_id)='active'`),
    query(`SELECT COUNT(*)::int count FROM schools WHERE status='active'`),
    query(`SELECT COUNT(*)::int count FROM classes WHERE active=true AND school_id IN (SELECT id FROM schools WHERE status='active')`),
    query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 3`),
-   query(`SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.status='published' ORDER BY n.created_at DESC LIMIT 4`)
+   query(`SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.status='published' ORDER BY n.created_at DESC LIMIT 4`),
+   loadPulseEvents(3)
   ]);
-  res.render('home',{title:'ЭКОРАЙОН',total:totals.rows[0].total,schoolCount:schools.rows[0].count,classCount:classes.rows[0].count,leaders:leaders.rows,news:news.rows});
+  res.render('home',{title:'ЭКОРАЙОН',total:totals.rows[0].total,schoolCount:schools.rows[0].count,classCount:classes.rows[0].count,leaders:leaders.rows,news:news.rows,pulseEvents});
  } catch(e){next(e)}
 });
 app.get('/about',(req,res)=>res.render('page',{title:req.session.lang==='by'?'Пра праект':'О проекте',body:req.session.lang==='by'?'ЭКАРАЁН аб’ядноўвае школы раёна ў агульнай экалагічнай ініцыятыве. Мы ўлічваем збор другаснай сыравіны, дзелімся вынікамі і падтрымліваем адказнае стаўленне да навакольнага асяроддзя.':'ЭКОРАЙОН объединяет школы района в общей экологической инициативе. Мы учитываем фактический сбор вторсырья, делимся результатами и поддерживаем ответственное отношение к окружающей среде.'}));
@@ -180,6 +181,47 @@ app.get('/schools',async(req,res,next)=>{try{const r=await query(`SELECT s.*,COA
 app.get('/schools/:id',async(req,res,next)=>{try{const s=await query('SELECT * FROM schools WHERE id=$1 AND status=\'active\'',[req.params.id]);if(!s.rowCount)return res.status(404).render('error',{title:'Не найдено',message:'Школа не найдена.'});const [stats,classes,news]=await Promise.all([query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.school_id=$1 AND e.status IN ('pending','approved') GROUP BY m.code,m.name ORDER BY m.name`,[req.params.id]),query('SELECT * FROM classes WHERE school_id=$1 AND active=true ORDER BY name',[req.params.id]),query('SELECT * FROM news WHERE school_id=$1 AND status=\'published\' ORDER BY created_at DESC LIMIT 10',[req.params.id])]);res.render('school-detail',{title:s.rows[0].name,school:s.rows[0],stats:stats.rows,classes:classes.rows,news:news.rows});}catch(e){next(e)}});
 app.get('/ratings',async(req,res,next)=>{try{const [r,m,classes,monthly,yearly,pointSchools]=await Promise.all([query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE s.status='active' GROUP BY s.id ORDER BY total DESC,s.name`),query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.status IN ('pending','approved') GROUP BY m.code,m.name ORDER BY total DESC`),query(`SELECT c.id,c.name class_name,s.id school_id,s.name school_name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM classes c JOIN schools s ON s.id=c.school_id LEFT JOIN collection_entries e ON e.class_id=c.id AND e.status IN ('pending','approved') WHERE c.active AND s.status='active' GROUP BY c.id,s.id ORDER BY total DESC,c.name`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('month',e.period_month)=date_trunc('month',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('year',e.period_month)=date_trunc('year',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(l.points),0)::numeric(14,2) points FROM schools s LEFT JOIN point_ledger l ON l.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY points DESC,s.name`)]);res.render('ratings',{title:'Рейтинги',schools:r.rows,materials:m.rows,classes:classes.rows,monthly:monthly.rows,yearly:yearly.rows,pointSchools:pointSchools.rows});}catch(e){next(e)}});
 app.get('/search',async(req,res,next)=>{try{const term=(req.query.q||'').trim();if(!term)return res.render('search',{title:'Поиск',term,results:[]});const like='%'+term+'%';const r=await query(`SELECT * FROM (SELECT 'school' type,id,title,subtitle,url FROM (SELECT id,name title,COALESCE(locality,'') subtitle,'/schools/'||id url FROM schools WHERE status='active' AND (name ILIKE $1 OR locality ILIKE $1)) a UNION ALL SELECT 'news',id,title,category,'/news/'||id FROM news WHERE status='published' AND (title ILIKE $1 OR body ILIKE $1) UNION ALL SELECT 'class',c.id,c.name,s.name,'/schools/'||s.id FROM classes c JOIN schools s ON s.id=c.school_id WHERE c.active AND (c.name ILIKE $1 OR s.name ILIKE $1)) x ORDER BY title LIMIT 50`,[like]);res.render('search',{title:'Поиск',term,results:r.rows});}catch(e){next(e)}});
+
+async function loadPulseEvents(limit=30){
+ const r=await query(`SELECT * FROM (
+  SELECT 'collection'::text kind,e.created_at happened_at,s.name school_name,
+   'Подтверждён сбор вторсырья'::text title,
+   m.name||' · '||e.quantity::text||' кг' detail,
+   '/schools/'||s.id::text url
+  FROM collection_entries e JOIN schools s ON s.id=e.school_id
+  JOIN materials m ON m.code=e.material_code
+  WHERE e.status='approved' AND s.status='active'
+  UNION ALL
+  SELECT 'achievement',sa.earned_at,s.name,
+   'Получено достижение: '||a.title_ru,'Новое достижение школы','/schools/'||s.id::text
+  FROM school_achievements sa JOIN schools s ON s.id=sa.school_id
+  JOIN eco_achievements a ON a.id=sa.achievement_id WHERE s.status='active'
+  UNION ALL
+  SELECT 'mission',ms.created_at,s.name,'Выполнена экологическая миссия',
+   m.title_ru,'/missions'
+  FROM mission_submissions ms JOIN schools s ON s.id=ms.school_id
+  JOIN eco_missions m ON m.id=ms.mission_id
+  WHERE ms.status='approved' AND s.status='active'
+  UNION ALL
+  SELECT 'news',n.created_at,COALESCE(s.name,'ЭКОРАЙОН'),n.title,
+   COALESCE(n.category,'Новости'),'/news/'||n.id::text
+  FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.status='published'
+ ) events ORDER BY happened_at DESC NULLS LAST LIMIT $1`,[limit]);
+ return r.rows;
+}
+
+app.get('/pulse',async(req,res,next)=>{try{
+ const events=await loadPulseEvents(60);
+ const stats=await query(`SELECT
+  (SELECT COUNT(*)::int FROM schools WHERE status='active') schools,
+  (SELECT COUNT(*)::int FROM collection_entries WHERE status='approved') collections,
+  (SELECT COALESCE(SUM(quantity),0)::numeric(14,2) FROM collection_entries WHERE status='approved') kilograms,
+  (SELECT COUNT(*)::int FROM mission_submissions WHERE status='approved') missions`);
+ const kind=['all','collection','mission','achievement','news'].includes(req.query.type)?req.query.type:'all';
+ const filtered=kind==='all'?events:events.filter(e=>e.kind===kind);
+ res.render('pulse',{title:req.session.lang==='by'?'Пульс ЭКАРАЁНА':'Пульс ЭКОРАЙОНА',events:filtered,stats:stats.rows[0],activeType:kind});
+}catch(e){next(e)}});
+
 app.get('/news-list',async(req,res,next)=>{try{const r=await query("SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.status='published' ORDER BY n.created_at DESC");res.render('news-list',{title:'Новости и мероприятия',items:r.rows});}catch(e){next(e)}});
 
 app.get('/missions',async(req,res,next)=>{try{

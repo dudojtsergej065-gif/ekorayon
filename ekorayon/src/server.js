@@ -512,6 +512,7 @@ app.get('/admin/audit',requireMainAdmin,async(req,res,next)=>{try{const r=await 
 /* Одноразовая очистка тестовых данных. Доступна только главному администратору. */
 app.get('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
  try{
+  const completed=await query("SELECT EXISTS(SELECT 1 FROM audit_log WHERE action='clean_test_data') done");
   const [schools,entries,newsCount,missions,schoolUsers]=await Promise.all([
    query('SELECT COUNT(*)::int count FROM schools'),
    query('SELECT COUNT(*)::int count FROM collection_entries'),
@@ -519,7 +520,7 @@ app.get('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
    query('SELECT COUNT(*)::int count FROM eco_missions WHERE created_by IS NOT NULL'),
    query("SELECT COUNT(*)::int count FROM users WHERE role='school'")
   ]);
-  res.render('clean-test-data',{title:'Очистка тестовых данных',preview:{schools:schools.rows[0].count,entries:entries.rows[0].count,news:newsCount.rows[0].count,missions:missions.rows[0].count,schoolUsers:schoolUsers.rows[0].count}});
+  res.render('clean-test-data',{title:'Очистка тестовых данных',preview:{schools:schools.rows[0].count,entries:entries.rows[0].count,news:newsCount.rows[0].count,missions:missions.rows[0].count,schoolUsers:schoolUsers.rows[0].count,completed:completed.rows[0].done}});
  }catch(e){next(e)}
 });
 app.post('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
@@ -527,6 +528,9 @@ app.post('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
  const client=await pool.connect();
  try{
   await client.query('BEGIN');
+  await client.query('SELECT pg_advisory_xact_lock(72420261127)');
+  const already=await client.query("SELECT EXISTS(SELECT 1 FROM audit_log WHERE action='clean_test_data') done");
+  if(already.rows[0].done){await client.query('ROLLBACK');return redirectMsg(res,'/admin/clean-test-data','Очистка уже была выполнена. Повторный запуск заблокирован.');}
   const before=await client.query("SELECT (SELECT COUNT(*)::int FROM schools) schools,(SELECT COUNT(*)::int FROM collection_entries) entries,(SELECT COUNT(*)::int FROM news) news,(SELECT COUNT(*)::int FROM eco_missions WHERE created_by IS NOT NULL) missions,(SELECT COUNT(*)::int FROM users WHERE role='school') school_users");
   await client.query('DELETE FROM news');
   await client.query('DELETE FROM eco_missions WHERE created_by IS NOT NULL');

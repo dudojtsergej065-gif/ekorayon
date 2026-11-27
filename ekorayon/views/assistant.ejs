@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+<section class="assistant-page">
+  <div class="assistant-hero">
+    <div class="assistant-avatar">🌿</div>
+    <div>
+      <div class="eyebrow">ТВОЙ ЭКОЛОГИЧЕСКИЙ НАПАРНИК</div>
+      <h1><%= lang==='by'?'Прывітанне! Я ЭКАБОТ':'Привет! Я ЭКОБОТ' %></h1>
+      <p><%= lang==='by'?'Задавай пытанні пра экалогію, сартаванне, заданні і працу платформы.':'Задавай вопросы об экологии, сортировке, заданиях и работе платформы.' %></p>
+      <div class="assistant-status"><i></i><%= assistantEnabled?(lang==='by'?'ГАТОВЫ ДА ГУТАРКІ':'ГОТОВ К ОБЩЕНИЮ'):(lang==='by'?'ПАТРЭБНА НАЛАДКА':'ТРЕБУЕТСЯ ПОДКЛЮЧЕНИЕ ИИ') %></div>
+    </div>
+  </div>
+  <% if(!assistantEnabled){ %>
+    <div class="assistant-unavailable"><b>ЭКОБОТ почти готов!</b> Для запуска администрации нужно добавить секретный параметр <code>OPENAI_API_KEY</code> в переменные окружения Railway. Сам ключ нельзя размещать в коде сайта или отправлять в чат.</div>
+  <% } %>
+  <div class="assistant-chat">
+    <div class="assistant-messages" id="assistantMessages" aria-live="polite">
+      <div class="assistant-message bot"><%= lang==='by'?'Прывітанне! Я ЭКАБОТ 🌱 Чым магу дапамагчы?':'Привет! Я ЭКОБОТ 🌱 Чем могу помочь? Спроси меня о природе, переработке или экологических проектах!' %></div>
+    </div>
+    <div class="assistant-suggestions" id="assistantSuggestions">
+      <button type="button" data-question="Как правильно сортировать отходы в школе?">♻️ Как сортировать отходы?</button>
+      <button type="button" data-question="Предложи идеи экологической акции для школы.">🌳 Идеи для акции</button>
+      <button type="button" data-question="Как организовать сбор макулатуры?">📚 Сбор макулатуры</button>
+      <button type="button" data-question="Расскажи интересный экологический факт.">✨ Экофакт</button>
+    </div>
+    <form class="assistant-compose" id="assistantForm">
+      <textarea id="assistantInput" maxlength="2500" rows="2" placeholder="<%= lang==='by'?'Напішы сваё пытанне...':'Напиши свой вопрос...' %>" aria-label="Ваш вопрос" required <%= assistantEnabled?'':'disabled' %>></textarea>
+      <button id="assistantSend" type="submit" <%= assistantEnabled?'':'disabled' %>><%= lang==='by'?'Адправіць':'Отправить' %> ➤</button>
+    </form>
+    <div class="assistant-note">ЭКОБОТ может ошибаться. Не отправляй ему пароли и личные данные.</div>
+  </div>
+</section>
+<script>
+(function(){
+  const enabled=<%= assistantEnabled?'true':'false' %>;
+  if(!enabled)return;
+  const form=document.getElementById('assistantForm');
+  const input=document.getElementById('assistantInput');
+  const send=document.getElementById('assistantSend');
+  const list=document.getElementById('assistantMessages');
+  const suggestions=document.getElementById('assistantSuggestions');
+  const history=[];
+  function addMessage(text,role,extra){
+    const item=document.createElement('div');
+    item.className='assistant-message '+role+(extra?' '+extra:'');
+    item.textContent=text;
+    list.appendChild(item);
+    list.scrollTop=list.scrollHeight;
+  }
+  async function ask(question){
+    const value=String(question||'').trim();
+    if(!value||send.disabled)return;
+    addMessage(value,'user');
+    history.push({role:'user',content:value});
+    input.value='';
+    send.disabled=true;
+    const typing=document.createElement('div');
+    typing.className='assistant-typing';
+    typing.textContent='ЭКОБОТ думает…';
+    list.appendChild(typing);
+    list.scrollTop=list.scrollHeight;
+    try{
+      const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history.slice(-12)})});
+      const data=await response.json();
+      typing.remove();
+      if(!response.ok)throw new Error(data.error||'Не удалось получить ответ.');
+      addMessage(data.answer,'bot');
+      history.push({role:'assistant',content:data.answer});
+      if(history.length>12)history.splice(0,history.length-12);
+    }catch(error){
+      typing.remove();
+      addMessage(error.message||'Ошибка соединения. Попробуй ещё раз.','bot','error');
+      history.pop();
+    }finally{
+      send.disabled=false;
+      input.focus();
+    }
+  }
+  form.addEventListener('submit',event=>{event.preventDefault();ask(input.value);});
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();form.requestSubmit();}});
+  suggestions.addEventListener('click',event=>{
+    const button=event.target.closest('button[data-question]');
+    if(button)ask(button.dataset.question);
+  });
+})();
+</script>
+<%- include('partials/footer') %>

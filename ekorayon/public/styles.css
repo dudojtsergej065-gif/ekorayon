@@ -696,3 +696,59 @@ button:active,.btn:active,.login-link:active{transform:translateY(1px) scale(.98
 .eu-admin-panel{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:27px;border-radius:22px;background:linear-gradient(120deg,#091e2b,#123d3c);color:#effff8;margin:55px 0}.eu-admin-panel h2{margin:8px 0;font-size:27px}.eu-admin-panel p{max-width:480px;color:#b2cec3;line-height:1.6;margin:0}.eu-admin-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:45%}.eu-admin-links a,.eu-admin-login{padding:12px;border:1px solid rgba(130,240,188,.22);border-radius:11px;color:#b5f7d4;text-decoration:none;font-size:11px;font-weight:850;background:rgba(255,255,255,.05)}.eu-admin-links a:hover,.eu-admin-login:hover{background:rgba(90,235,166,.14);border-color:#68e9ae}
 @media(max-width:760px){.eco-universe-hero{grid-template-columns:1fr;padding:34px 23px 20px;min-height:0}.eu-hero-copy h1{font-size:65px}.eu-planet-wrap{height:230px;grid-row:2}.eu-planet{width:155px;height:155px;font-size:85px}.eu-planet-ring{width:240px;height:78px}.eu-hero-foot{font-size:7px;letter-spacing:1px}.eu-stats{grid-template-columns:repeat(2,1fr);margin-bottom:38px}.eu-stats article{padding:15px}.eu-section{margin:38px 0}.eu-section-head{align-items:flex-start}.eu-section-head p{font-size:12px}.eu-section-symbol{font-size:34px}.eu-passport-top{padding:18px}.eu-passport-avatar{width:55px;height:55px;font-size:30px}.eu-passport-top h3{font-size:17px}.eu-passport-stamp{width:55px;height:55px;font-size:9px}.eu-passport-metrics{grid-template-columns:repeat(2,1fr);padding:17px}.eu-passport-bottom{padding:13px 17px;font-size:8px}.eu-levels{grid-template-columns:repeat(2,1fr)}.eu-network{grid-template-columns:1fr;padding:15px}.eu-network-core{width:120px;height:120px}.eu-network-core span{font-size:30px}.eu-school-nodes{grid-template-columns:1fr}.eu-school-node{padding:10px}.eu-quiz{padding:17px}.eu-quiz h3{font-size:18px}.eu-awards{grid-template-columns:1fr}.eu-admin-panel{align-items:stretch;flex-direction:column;padding:20px}.eu-admin-links{min-width:0;grid-template-columns:1fr}.eu-locked-passport{align-items:flex-start;flex-wrap:wrap}.eu-locked-passport a{margin-left:52px}.eu-garden{min-height:245px}.eu-garden-ground{height:125px}}
 @media(prefers-reduced-motion:reduce){.eu-planet,.eu-float,.eu-garden-tree,.eu-garden-house,.eu-garden-bush{animation:none}.eu-button,.eu-school-node,.eu-quiz-option{transition:none}}
+
+
+/* ЭКОРАЙОН — финальная коррекция контраста и формы элементов */
+html{background:#071716!important;color-scheme:dark}
+body{
+  background:radial-gradient(ellipse at 10% 0%,#123b31 0,transparent 34%),
+             radial-gradient(ellipse at 92% 18%,#182c43 0,transparent 30%),#071716!important;
+  color:#eafff5!important;
+}
+.container,.page-head,.prose,.form-wrap{color:#eafff5}
+.page-head h1,.prose h1,.form-wrap h1,
+.section h2,.section-head h2,.detail-grid h2,
+.panel h1,.panel h2,.panel h3,.panel h4{color:#effff7!important}
+.page-head p,.prose p,.split p,.muted{color:#b8d2c6}
+.stat,.leader-card:not(.rank-1),.news-card,.school-card,.panel,
+.material-card,.result,.report-card,.table-wrap,.quote-card,
+.dashboard-grid .panel,.detail-grid>*,.admin-links a{
+  background:linear-gradient(145deg,#142e2b,#0c2222)!important;
+  color:#eafff5!important;border-color:#294b43!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.24);
+}
+.stat span,.news-card p,.news-card small,.school-card p,
+.entry small,.simple-row small,.metric-row small,
+.report-card small,.result small{color:#a9c5b8!important}
+.news-card h3,.school-card h3,.material-card b,
+.panel h2,.panel h3,.panel h4{color:#effff7!important}
+.stat strong,.school-card strong,.material-card strong,
+.text-link,.admin-links a{color:#8cebb7}
+.form label,.stack-form label{color:#d5eee2!important}
+.form input,.form select,.form textarea,.stack-form input,
+.stack-form select,.stack-form textarea,.searchbar input,
+.inline-form input,.inline-form select,.review-form input{
+  background:#091e1d!important;color:#effff7!important;
+  border:1px solid #3a6658!important;
+}
+.form input::placeholder,.form textarea::placeholder,
+.stack-form input::placeholder,.stack-form textarea::placeholder,
+.searchbar input::placeholder{color:#88a99a!important}
+.table-wrap table{color:#eafff5}
+.table-wrap th{background:#18352f!important;color:#c5e8d5!important}
+.table-wrap td{color:#e1f4e9!important}
+.table-wrap th,.table-wrap td{border-bottom-color:#294b43!important}
+.empty{background:#122b29!important;color:#b8d2c6!important;border-color:#3b6658!important}
+.topbar .login-link{
+  border-radius:999px!important;
+  min-height:40px;padding:10px 19px;
+  border:1px solid rgba(235,255,207,.5);
+  background:linear-gradient(120deg,#d7ff70,#55d995)!important;
+  color:#09251c!important;
+  box-shadow:0 7px 22px rgba(0,0,0,.25),0 0 0 3px rgba(120,235,165,.08);
+}
+.topbar .login-link:hover{border-radius:999px!important;filter:brightness(1.06);transform:translateY(-2px)}
+.topbar .login-link .count{border-radius:999px;background:#0d4935;color:#dffff0}
+@media(max-width:600px){
+  .topbar .login-link{min-height:36px;padding:8px 13px;border-radius:999px!important}
+}

@@ -128,12 +128,17 @@ app.get('/achievements',async(req,res,next)=>{try{
  res.render('achievements',{title:req.session.lang==='by'?'Дасягненні':'Достижения',items:r.rows,earned:earned.rows});
  }catch(e){next(e)}});
 app.get('/hall-of-fame',async(req,res,next)=>{try{
- const r=await query(`SELECT s.id,s.name,COUNT(sa.id)::int badges,COALESCE(SUM(l.points),0)::numeric(14,2) points,COALESCE(SUM(e.quantity) FILTER(WHERE e.status='approved'),0)::numeric(14,2) kg FROM schools s LEFT JOIN school_achievements sa ON sa.school_id=s.id LEFT JOIN point_ledger l ON l.school_id=s.id LEFT JOIN collection_entries e ON e.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY badges DESC,points DESC,kg DESC LIMIT 30`);
+ const r=await query(`SELECT s.id,s.name,
+ (SELECT COUNT(*)::int FROM school_achievements sa WHERE sa.school_id=s.id) badges,
+ (SELECT COALESCE(SUM(l.points),0)::numeric(14,2) FROM point_ledger l WHERE l.school_id=s.id) points,
+ (SELECT COALESCE(SUM(e.quantity),0)::numeric(14,2) FROM collection_entries e WHERE e.school_id=s.id AND e.status='approved') kg
+ FROM schools s WHERE s.status='active'
+ ORDER BY badges DESC,points DESC,kg DESC LIMIT 30`);
  res.render('hall-of-fame',{title:req.session.lang==='by'?'Зала славы':'Зал славы',schools:r.rows});
  }catch(e){next(e)}});
 app.get('/impact',async(req,res,next)=>{try{
  const [totals,materials,events]=await Promise.all([
- query(`SELECT COALESCE(SUM(e.quantity),0)::numeric(14,2) kg,COUNT(DISTINCT e.school_id)::int schools,COUNT(*) FILTER(WHERE e.status='approved')::int entries,COUNT(DISTINCT ms.school_id)::int mission_schools FROM collection_entries e LEFT JOIN mission_submissions ms ON ms.school_id=e.school_id WHERE e.status='approved'`),
+ query(`SELECT COALESCE(SUM(quantity),0)::numeric(14,2) kg,COUNT(DISTINCT school_id)::int schools,COUNT(*)::int entries FROM collection_entries WHERE status='approved'`),
  query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.status='approved' GROUP BY m.code,m.name ORDER BY total DESC`),
  query("SELECT COUNT(*)::int count FROM mission_submissions WHERE status='approved'")]);
  res.render('impact',{title:req.session.lang==='by'?'Экалагічны вынік':'Экологический результат',totals:totals.rows[0],materials:materials.rows,events:events.rows[0]});

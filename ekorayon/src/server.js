@@ -67,12 +67,12 @@ async function awardEligibleAchievements(schoolId){
  }
 }
 const SCHOOL_AVATARS=[
- {code:'sprout',name:'Росток',icon:'🌱',points:0},
- {code:'fox',name:'Эко-лис',icon:'🦊',points:25},
- {code:'owl',name:'Мудрая сова',icon:'🦉',points:75},
- {code:'wolf',name:'Лесной волк',icon:'🐺',points:150},
- {code:'dragon',name:'Зелёный дракон',icon:'🐉',points:300},
- {code:'phoenix',name:'Феникс природы',icon:'🔥',points:500}
+ {code:'sprout',name:'Росток',nameBy:'Парастак',icon:'🌱',points:0},
+ {code:'fox',name:'Эко-лис',nameBy:'Эка-ліс',icon:'🦊',points:25},
+ {code:'owl',name:'Мудрая сова',nameBy:'Мудрая сава',icon:'🦉',points:75},
+ {code:'wolf',name:'Лесной волк',nameBy:'Лясны воўк',icon:'🐺',points:150},
+ {code:'dragon',name:'Зелёный дракон',nameBy:'Зялёны цмок',icon:'🐉',points:300},
+ {code:'phoenix',name:'Феникс природы',nameBy:'Фенікс прыроды',icon:'🔥',points:500}
 ];
 async function verifyCaptcha(req){
   if(process.env.TURNSTILE_SECRET_KEY){

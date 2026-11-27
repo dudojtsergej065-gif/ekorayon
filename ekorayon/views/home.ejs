@@ -40,12 +40,12 @@
     <div class="art-cloud cloud-left"></div><div class="art-cloud cloud-right"></div>
     <div class="art-hill hill-back"></div><div class="art-hill hill-front"></div>
     <div class="art-tree tree-left"><i></i><b></b></div><div class="art-tree tree-right"><i></i><b></b></div>
-    <div class="eco-tower"><span>♻</span><small>RE:START</small></div>
+    <div class="eco-tower"><span>♻</span><small>НОВЫЙ СТАРТ</small></div>
     <div class="floating-chip chip-top"><span>🌱</span> Действуй экологично</div>
     <div class="floating-chip chip-bottom"><span>⚡</span> Твой вклад важен</div>
     <div class="art-bottom-label">БУДУЩЕЕ НАЧИНАЕТСЯ ЗДЕСЬ <b>↗</b></div>
   </div>
-  <div class="hero-bottom-line"><span>ЭКОРАЙОН / 2026</span><span>THINK GREEN · ACT NOW</span></div>
+  <div class="hero-bottom-line"><span>ЭКОРАЙОН / 2026</span><span>ДУМАЙ ЭКОЛОГИЧНО · ДЕЙСТВУЙ СЕЙЧАС</span></div>
 </section>
 
 <section class="stats-grid home-stats">
@@ -55,7 +55,7 @@
   <div class="stat stat-mission"><span class="stat-icon">🌍</span><span>Наша миссия</span><strong>0 <small>отходов</small></strong><i>Больше заботы о планете</i></div>
 </section>
 
-<section class="home-earth-launch"><div class="home-earth-launch-art"><span>🌍</span><i></i><b>✦</b></div><div><span class="eyebrow">ГЛАВНАЯ МИССИЯ РАЙОНА</span><h2>МИССИЯ <em>«ЗЕМЛЯ»</em></h2><p>Одна планета. Одна команда. Общий прогресс, который складывается из реальных результатов школ.</p><a class="btn primary" href="/mission-earth">Открыть миссию ↗</a></div><div class="home-earth-launch-tag">LEVEL UP<br><strong>TOGETHER</strong></div></section>
+<section class="home-earth-launch"><div class="home-earth-launch-art"><span>🌍</span><i></i><b>✦</b></div><div><span class="eyebrow">ГЛАВНАЯ МИССИЯ РАЙОНА</span><h2>МИССИЯ <em>«ЗЕМЛЯ»</em></h2><p>Одна планета. Одна команда. Общий прогресс, который складывается из реальных результатов школ.</p><a class="btn primary" href="/mission-earth">Открыть миссию ↗</a></div><div class="home-earth-launch-tag"<span>РАСТЁМ</span><br><strong>ВМЕСТЕ</strong></div></section>
 
 <section class="home-quickstart">
  <div class="home-quickstart-head"><div><span class="eyebrow">ТВОЯ ЭКОИСТОРИЯ НАЧИНАЕТСЯ ЗДЕСЬ</span><h2>Открой <em>возможности</em> ЭКОРАЙОНА</h2><p>Не ограничивайся одним разделом. Здесь можно исследовать, создавать, соревноваться и видеть реальные результаты.</p></div><span class="home-quickstart-orbit">✳</span></div>
@@ -99,7 +99,7 @@
 <section class="home-mission-panel">
   <div class="mission-decoration">✳</div>
   <div class="mission-copy"><span class="eyebrow">ТВОЯ КОМАНДА МОЖЕТ БОЛЬШЕ</span><h2>Не просто сортируй.<br><em>Создавай перемены.</em></h2><p>ЭКОРАЙОН объединяет школы, учеников и педагогов в одном экологическом движении. Каждый килограмм вторсырья и каждое участие в добром деле приближают нас к общей цели.</p><a class="btn mission-btn" href="/about">Узнать о проекте <span>↗</span></a></div>
-  <div class="mission-visual"><div class="mission-circle circle-one"></div><div class="mission-circle circle-two"></div><div class="mission-planet">🌍</div><div class="mission-leaf leaf-a">🌿</div><div class="mission-leaf leaf-b">🍃</div><div class="mission-sticker">MAKE<br>IT<br>GREEN!</div></div>
+  <div class="mission-visual"><div class="mission-circle circle-one"></div><div class="mission-circle circle-two"></div><div class="mission-planet">🌍</div><div class="mission-leaf leaf-a">🌿</div><div class="mission-leaf leaf-b">🍃</div><div class="mission-sticker">СДЕЛАЕМ<br>МИР<br>ЗЕЛЁНЫМ!</div></div>
 </section>
 
 <section class="section home-news-section"><div class="section-head"><div><span class="eyebrow home-eyebrow">📣 БУДЬ В ТЕМЕ</span><h2><%= t('Новости и события','Навіны і падзеі') %></h2><p class="section-subtitle">Экоакции, инициативы и важные события нашего района.</p></div></div><div class="news-grid home-news-grid"><% news.forEach((n,i)=>{ %><a class="news-card home-news-card news-tone-<%= i%3 %>" href="/news/<%= n.id %>"><span class="tag"><%= n.category %></span><span class="news-deco"><%= ['✳','🌱','⚡'][i%3] %></span><h3><%= n.title %></h3><p><%= n.body.slice(0,150) %><%= n.body.length>150?'…':'' %></p><small><%= new Date(n.created_at).toLocaleDateString('ru-RU') %><% if(n.school_name){ %> · <%= n.school_name %><% } %></small><span class="news-open">Открыть ↗</span></a><% }) %><% if(!news.length){ %><div class="empty">Новости появятся здесь после публикации администрацией.</div><% } %></div></section>

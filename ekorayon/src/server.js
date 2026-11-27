@@ -158,6 +158,7 @@ app.get('/mission-earth',async(req,res,next)=>{try{
  const maxLeader=Math.max(0,...leaders.rows.map(x=>Number(x.total)||0));
  res.render('mission-earth',{title:'Миссия «Земля»',total,schoolCount:schools.rows[0].count,classCount:classes.rows[0].count,missionCount:missions.rows[0].count,leaders:leaders.rows,maxLeader,nextMilestone,progress,milestones});
  }catch(e){next(e)}});
+app.get('/future-professions',(req,res)=>res.render('future-professions',{title:'Профессии будущего'}));
 app.get('/about',(req,res)=>res.render('page',{title:req.session.lang==='by'?'Пра праект':'О проекте',body:req.session.lang==='by'?'ЭКАРАЁН аб’ядноўвае школы раёна ў агульнай экалагічнай ініцыятыве. Мы ўлічваем збор другаснай сыравіны, дзелімся вынікамі і падтрымліваем адказнае стаўленне да навакольнага асяроддзя.':'ЭКОРАЙОН объединяет школы района в общей экологической инициативе. Мы учитываем фактический сбор вторсырья, делимся результатами и поддерживаем ответственное отношение к окружающей среде.'}));
 app.get('/rules',(req,res)=>{const by=req.session.lang==='by';const sections=by?[
 {heading:'Хто можа ўдзельнічаць',text:'Да праекта далучаюцца школы і адукацыйныя ўстановы раёна. Ад кожнай школы пажадана вызначыць адказнага дарослага каардынатара, які працуе з кабінетам і правярае даныя перад адпраўкай.'},

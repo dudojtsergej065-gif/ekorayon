@@ -48,7 +48,7 @@
   <div class="eu-map-canvas" id="euMapCanvas">
    <svg class="eu-map-lines" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="euLineGlow"><stop stop-color="#54d99b" stop-opacity=".05"/><stop offset=".5" stop-color="#8af0b8" stop-opacity=".8"/><stop offset="1" stop-color="#54d99b" stop-opacity=".05"/></linearGradient></defs><path d="M500 280 L170 105 M500 280 L390 90 M500 280 L720 105 M500 280 L850 250 M500 280 L760 455 M500 280 L360 465 M500 280 L130 330" stroke="url(#euLineGlow)" stroke-width="2" fill="none" stroke-dasharray="7 9"/><circle cx="500" cy="280" r="115" fill="none" stroke="#75e8ad" stroke-opacity=".15" stroke-dasharray="3 9"/><circle cx="500" cy="280" r="185" fill="none" stroke="#75e8ad" stroke-opacity=".1" stroke-dasharray="2 12"/></svg>
    <div class="eu-map-hub"><span>🌍</span><b>ЭКОРАЙОН</b><small>ЕДИНАЯ ЭКОСЕТЬ</small><i></i></div>
-   <% schools.forEach((s,i)=>{ %><button type="button" class="eu-map-node" style="--node-index:<%= i %>" data-name="<%= String(s.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>" data-place="<%= String(s.locality||s.address||'Школа-участник').replace(/&/g,'&amp;').replace(/"/g,'&quot;') %>" data-kg="<%= Number(s.kg||0).toLocaleString('ru-RU') %>" data-url="/schools/<%= s.id %>"><span><%= ['🌱','🌳','♻️','🌿','🏫'][i%5] %></span><b><%= s.name %></b><small><%= Number(s.kg).toLocaleString('ru-RU') %> кг</small></button><% }) %>
+   <% schools.forEach((s,i)=>{ %><button type="button" class="eu-map-node" style="--node-index:<%= i %>" data-name="<%= s.name %>" data-place="<%= s.locality||s.address||'Школа-участник' %>" data-kg="<%= Number(s.kg||0).toLocaleString('ru-RU') %>" data-url="/schools/<%= s.id %>"><span><%= ['🌱','🌳','♻️','🌿','🏫'][i%5] %></span><b><%= s.name %></b><small><%= Number(s.kg).toLocaleString('ru-RU') %> кг</small></button><% }) %>
    <% if(!schools.length){ %><div class="eu-map-empty">🌱<br>Школы появятся здесь после подключения к платформе.</div><% } %>
    <div class="eu-map-scan"></div>
   </div>
@@ -106,7 +106,20 @@
 <script>
 (()=>{
  const detail=document.getElementById('euMapDetail');
- document.querySelectorAll('.eu-map-node').forEach(node=>node.addEventListener('click',()=>{
+ const map=document.getElementById('euMapCanvas');
+ const mapNodes=[...document.querySelectorAll('.eu-map-node')];
+ function placeMapNodes(){
+  if(!map||!mapNodes.length)return;
+  const w=map.clientWidth,h=map.clientHeight;
+  const rx=Math.max(95,Math.min(w*.36,430)),ry=Math.max(115,Math.min(h*.37,205));
+  mapNodes.forEach((node,i)=>{
+   const angle=(-Math.PI/2)+(Math.PI*2*i/mapNodes.length);
+   node.style.setProperty('--node-x',(Math.cos(angle)*rx)+'px');
+   node.style.setProperty('--node-y',(Math.sin(angle)*ry)+'px');
+  });
+ }
+ placeMapNodes();window.addEventListener('resize',placeMapNodes,{passive:true});
+ mapNodes.forEach(node=>node.addEventListener('click',()=>{
   document.querySelectorAll('.eu-map-node').forEach(n=>n.classList.remove('active'));
   node.classList.add('active');
   detail.innerHTML='<span>✦</span><div><b></b><small></small></div><a></a>';

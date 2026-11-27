@@ -554,3 +554,127 @@ button:active,.btn:active,.login-link:active{transform:translateY(1px) scale(.98
 @keyframes eco-orb-float{0%{transform:translate3d(-12px,-16px,0) scale(.9)}100%{transform:translate3d(18px,22px,0) scale(1.12)}}
 @media(max-width:700px){#eco-motion-layer:after{background-size:72px 72px;opacity:.1}.eco-bg-orb{opacity:calc(var(--orb-opacity)*.65)}}
 @media(prefers-reduced-motion:reduce){#eco-motion-layer:before,#eco-motion-layer:after,.eco-bg-orb{animation:none!important}}
+
+
+/* ЭКОРАЙОН — новая верхняя панель навигации */
+.topbar{
+  min-height:unset;
+  padding:15px clamp(18px,4vw,64px) 13px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  column-gap:22px;
+  row-gap:13px;
+  background:linear-gradient(115deg,rgba(8,38,32,.98),rgba(13,66,49,.97) 55%,rgba(17,82,59,.98));
+  border-bottom:1px solid rgba(164,239,190,.18);
+  box-shadow:0 12px 34px rgba(5,30,22,.24);
+  backdrop-filter:blur(18px);
+}
+.topbar:after{
+  content:"";
+  position:absolute;
+  left:4%;right:4%;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(157,244,184,.48),rgba(245,211,119,.42),transparent);
+  pointer-events:none;
+}
+.topbar .brand{flex:0 0 auto;gap:12px;letter-spacing:.11em;font-size:15px}
+.topbar .brand-mark{
+  width:46px;height:46px;border-radius:15px;
+  background:linear-gradient(145deg,#dff8ad,#f4d36f);
+  color:#164b36;font-size:25px;
+  box-shadow:0 5px 20px rgba(2,20,13,.3),0 0 0 1px rgba(255,255,255,.2) inset;
+}
+.topbar .brand small{font-size:9px;letter-spacing:.045em;color:#b9d9c8;margin-top:2px}
+.topbar .nav{
+  order:3;
+  flex:1 0 100%;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  padding:9px 0 0;
+  border-top:1px solid rgba(180,232,198,.12);
+}
+.topbar .nav a{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:7px 12px;
+  border:1px solid transparent;border-radius:11px;
+  color:#c9e5d4;font-size:11px;font-weight:750;
+  letter-spacing:.015em;white-space:nowrap;
+  background:rgba(255,255,255,.035);
+  transition:background .22s ease,border-color .22s ease,color .22s ease,transform .22s ease,box-shadow .22s ease;
+}
+.topbar .nav a:after{display:none}
+.topbar .nav a:hover{
+  color:#f4ffd9;background:rgba(143,231,169,.13);
+  border-color:rgba(154,239,179,.32);
+  transform:translateY(-2px);
+  box-shadow:0 5px 17px rgba(1,20,12,.16),0 0 16px rgba(104,231,153,.08);
+}
+.topbar .top-actions{
+  margin-left:auto;gap:8px;flex:0 0 auto;
+}
+.topbar .lang{
+  display:inline-grid;place-items:center;min-width:36px;height:34px;
+  padding:0 9px;border-radius:10px;
+  border:1px solid rgba(177,224,193,.2);
+  background:rgba(255,255,255,.055);
+  color:#cce6d5;font-size:10px;font-weight:850;
+  transition:all .2s ease;
+}
+.topbar .lang:hover{background:rgba(255,255,255,.13);border-color:#9ce7b4;color:#fff}
+.topbar .login-link{
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:38px;padding:9px 16px;border-radius:12px;
+  background:linear-gradient(135deg,#dff6a8,#f2cf70);
+  color:#173d2e;font-size:11px;font-weight:900;
+  box-shadow:0 5px 18px rgba(0,0,0,.18);
+}
+.topbar .link-button{
+  min-height:34px;padding:7px 11px;border-radius:10px;
+  color:#b9d9c8;font-size:11px;font-weight:750;
+  background:rgba(255,255,255,.045);
+  transition:background .2s ease,color .2s ease;
+}
+.topbar .link-button:hover{background:rgba(255,255,255,.12);color:#fff}
+.topbar .menu-toggle{
+  display:none;width:42px;height:42px;border-radius:12px;
+  border:1px solid rgba(177,224,193,.25);
+  background:rgba(255,255,255,.07);color:#e6ffe9;
+  font-size:21px;cursor:pointer;
+}
+@media(max-width:900px){
+  .topbar{padding:12px 20px;column-gap:12px;row-gap:10px}
+  .topbar .menu-toggle{display:grid;place-items:center;order:2;margin-left:auto}
+  .topbar .top-actions{order:3;margin-left:0}
+  .topbar .nav{
+    display:none;order:4;position:static;inset:auto;
+    flex:1 0 100%;width:100%;max-height:min(65vh,460px);
+    overflow:auto;overscroll-behavior:contain;
+    padding:12px;border:1px solid rgba(166,231,185,.18);
+    border-radius:16px;background:rgba(5,34,27,.97);
+    box-shadow:0 14px 32px rgba(0,0,0,.2);
+    flex-direction:row;align-items:stretch;justify-content:flex-start;
+    gap:7px;
+  }
+  .topbar .nav.open{display:flex}
+  .topbar .nav a{flex:1 1 155px;justify-content:flex-start}
+}
+@media(max-width:600px){
+  .topbar{padding:10px 14px;column-gap:8px}
+  .topbar .brand{font-size:12px;gap:9px;letter-spacing:.08em}
+  .topbar .brand-mark{width:39px;height:39px;font-size:22px}
+  .topbar .brand small{font-size:8px}
+  .topbar .menu-toggle{width:39px;height:39px}
+  .topbar .top-actions{width:auto;margin-left:auto;gap:5px}
+  .topbar .lang{min-width:31px;height:31px;padding:0 7px;font-size:9px}
+  .topbar .login-link{min-height:34px;padding:8px 11px;font-size:10px}
+  .topbar .link-button{font-size:10px;padding:6px 8px}
+  .topbar .nav{padding:9px;gap:6px}
+  .topbar .nav a{flex:1 1 130px;min-height:36px;padding:8px 10px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .topbar .nav a,.topbar .lang,.topbar .link-button{transition:none}
+}

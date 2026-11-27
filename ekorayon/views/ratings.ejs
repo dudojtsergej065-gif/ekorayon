@@ -52,7 +52,7 @@
     <span class="ratings-icon">⭐</span>
   </div>
   <p style="color:#d8e8d9;line-height:1.7;margin:0 0 10px">Это отдельный рейтинг по баллам: за сдачу разных видов вторсырья и участие в экологических мероприятиях. Баллы не прибавляются к килограммам и не влияют на основной рейтинг.</p>
-  <div class="empty" style="background:#172522;color:#c8d8c8;border-color:#746b35">Система начисления баллов и настройки тарифов администратора ещё подключаются. Как только она будет готова, здесь появятся школы-лидеры и их достижения. Баллы пока не рассчитываются и не отображаются, чтобы не показывать вымышленные результаты.</div>
+  <% if (pointSchools.length) { %><div class="table-wrap ratings-table-wrap"><table class="ratings-table"><thead><tr><th>Место</th><th>Школа</th><th>Баллы</th></tr></thead><tbody><% pointSchools.forEach((s,i)=>{ %><tr><td><span class="rank-badge ratings-rank"><%= i+1 %></span></td><td><a class="ratings-school-link" href="/schools/<%= s.id %>"><%= s.name %></a></td><td><strong class="ratings-kg"><%= Number(s.points).toLocaleString('ru-RU',{maximumFractionDigits:2}) %> баллов</strong></td></tr><% }) %></tbody></table></div><% } else { %><div class="empty" style="background:#172522;color:#c8d8c8;border-color:#746b35">Баллы появятся после подтверждения новых сдач или начислений за мероприятия.</div><% } %>
 </section>
 
 <div class="detail-grid ratings-detail-grid">

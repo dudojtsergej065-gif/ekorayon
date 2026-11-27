@@ -143,3 +143,27 @@ CREATE INDEX IF NOT EXISTS idx_entries_period ON collection_entries(period_month
 CREATE INDEX IF NOT EXISTS idx_entries_school ON collection_entries(school_id);
 CREATE INDEX IF NOT EXISTS idx_entries_status ON collection_entries(status);
 CREATE INDEX IF NOT EXISTS idx_news_status ON news(status);
+
+
+-- Система мотивационных баллов. Тарифы по умолчанию сохраняются при повторных запусках.
+CREATE TABLE IF NOT EXISTS point_rates (
+ material_code TEXT PRIMARY KEY REFERENCES materials(code) ON DELETE CASCADE,
+ points_per_kg NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK(points_per_kg>=0),
+ updated_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO point_rates(material_code,points_per_kg) VALUES
+ ('paper',2),('plastic',5),('glass',1),('metal',3),('batteries',8),('electronics',10)
+ON CONFLICT(material_code) DO NOTHING;
+CREATE TABLE IF NOT EXISTS point_ledger (
+ id BIGSERIAL PRIMARY KEY,
+ school_id BIGINT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+ entry_id BIGINT UNIQUE REFERENCES collection_entries(id) ON DELETE SET NULL,
+ kind TEXT NOT NULL CHECK(kind IN ('collection','event','adjustment')),
+ points NUMERIC(12,2) NOT NULL CHECK(points<>0),
+ rate_snapshot NUMERIC(10,2),
+ reason TEXT NOT NULL,
+ created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_point_ledger_school ON point_ledger(school_id,created_at DESC);

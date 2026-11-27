@@ -524,3 +524,15 @@ button:active,.btn:active,.login-link:active{transform:translateY(1px) scale(.98
  .eco-depth{transform:none!important}
  .eco-spotlight:before{display:none}
 }
+
+
+/* Динамическое приветствие на главной */
+.home-time-greeting{display:inline-flex;align-items:center;gap:12px;margin:0 0 22px;padding:11px 16px;border:1px solid rgba(126,213,160,.28);border-radius:16px;background:linear-gradient(110deg,rgba(79,170,116,.13),rgba(255,255,255,.035));backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(15,55,35,.08);animation:home-greeting-in .7s cubic-bezier(.2,.8,.2,1) both}
+.home-time-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:rgba(120,210,151,.14);font-size:23px;animation:home-greeting-icon 4s ease-in-out infinite}
+.home-time-greeting strong,.home-time-greeting small{display:block}
+.home-time-greeting strong{font-size:clamp(16px,2vw,20px);line-height:1.2;letter-spacing:-.02em}
+.home-time-greeting small{margin-top:4px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;opacity:.68}
+@keyframes home-greeting-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes home-greeting-icon{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(5deg)}}
+@media(max-width:700px){.home-time-greeting{margin-bottom:18px;padding:9px 12px}.home-time-icon{width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.home-time-greeting,.home-time-icon{animation:none}}

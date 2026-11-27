@@ -21,6 +21,18 @@
  const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(reduced)return;
  const layer=document.createElement('div');layer.id='eco-motion-layer';layer.setAttribute('aria-hidden','true');
+ const auroraOrbs=[
+  {x:'8%',y:'18%',size:'300px',duration:'19s',delay:'-7s',opacity:'.72'},
+  {x:'66%',y:'34%',size:'380px',duration:'24s',delay:'-13s',opacity:'.58'},
+  {x:'34%',y:'72%',size:'330px',duration:'22s',delay:'-4s',opacity:'.62'}
+ ];
+ auroraOrbs.forEach(o=>{
+  const orb=document.createElement('i');orb.className='eco-bg-orb';
+  orb.style.setProperty('--orb-x',o.x);orb.style.setProperty('--orb-y',o.y);
+  orb.style.setProperty('--orb-size',o.size);orb.style.setProperty('--orb-duration',o.duration);
+  orb.style.setProperty('--orb-delay',o.delay);orb.style.setProperty('--orb-opacity',o.opacity);
+  layer.appendChild(orb);
+ });
  for(let i=0;i<18;i++){
   const p=document.createElement('i');p.className='eco-dust';
   p.style.setProperty('--x',(3+((i*37)%94))+'%');

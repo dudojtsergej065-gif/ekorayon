@@ -167,3 +167,29 @@ CREATE TABLE IF NOT EXISTS point_ledger (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_point_ledger_school ON point_ledger(school_id,created_at DESC);
+
+
+-- Автоматические грамоты за подтверждённые сдачи вторсырья.
+ALTER TABLE collection_entries ADD COLUMN IF NOT EXISTS certificate_type TEXT NOT NULL DEFAULT 'auto';
+ALTER TABLE collection_entries ADD COLUMN IF NOT EXISTS student_name TEXT;
+DO $$ BEGIN
+ IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='collection_entries_certificate_type_check') THEN
+  ALTER TABLE collection_entries ADD CONSTRAINT collection_entries_certificate_type_check CHECK (certificate_type IN ('auto','school','class','student'));
+ END IF;
+END $$;
+CREATE TABLE IF NOT EXISTS certificates (
+ id BIGSERIAL PRIMARY KEY,
+ entry_id BIGINT NOT NULL UNIQUE REFERENCES collection_entries(id) ON DELETE CASCADE,
+ school_id BIGINT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+ certificate_type TEXT NOT NULL CHECK (certificate_type IN ('school','class','student')),
+ recipient_name TEXT NOT NULL,
+ school_name TEXT NOT NULL,
+ class_name TEXT,
+ material_name TEXT NOT NULL,
+ quantity NUMERIC(12,2) NOT NULL,
+ unit TEXT NOT NULL DEFAULT 'кг',
+ period_month DATE NOT NULL,
+ serial_number TEXT UNIQUE,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_certificates_school ON certificates(school_id,created_at DESC);

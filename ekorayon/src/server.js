@@ -509,6 +509,35 @@ app.post('/admin/points/rates',requireMainAdmin,async(req,res,next)=>{try{for(co
 app.post('/admin/points/award',requireMainAdmin,async(req,res,next)=>{try{const schoolId=Number(req.body.school_id),points=Number(req.body.points),reason=String(req.body.reason||'').trim();if(!Number.isInteger(schoolId)||!Number.isFinite(points)||points===0||Math.abs(points)>100000||reason.length<4||reason.length>500)return redirectMsg(res,'/admin/points','Укажите школу, количество баллов и причину.');const s=await query(`SELECT id FROM schools WHERE id=$1 AND status='active'`,[schoolId]);if(!s.rowCount)return redirectMsg(res,'/admin/points','Школа не найдена.');await query(`INSERT INTO point_ledger(school_id,kind,points,reason,created_by) VALUES($1,'event',$2,$3,$4)`,[schoolId,points,reason,req.session.user.id]);await audit(req.session.user,'manual_points_award','point_ledger',schoolId,{points,reason});await notify({schoolId,title:'Изменение мотивационных баллов',body:'Администрация внесла изменение в ваш баланс. Подробности доступны в кабинете школы.'});res.redirect('/admin/points?message='+encodeURIComponent('Баллы добавлены в историю.'));}catch(e){next(e)}});
 app.get('/admin/audit',requireMainAdmin,async(req,res,next)=>{try{const r=await query('SELECT a.*,u.name user_name FROM audit_log a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 200');res.render('audit',{title:'Журнал действий',items:r.rows});}catch(e){next(e)}});
 
+/* Одноразовая очистка тестовых данных. Доступна только главному администратору. */
+app.get('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
+ try{
+  const [schools,entries,newsCount,missions,schoolUsers]=await Promise.all([
+   query('SELECT COUNT(*)::int count FROM schools'),
+   query('SELECT COUNT(*)::int count FROM collection_entries'),
+   query('SELECT COUNT(*)::int count FROM news'),
+   query('SELECT COUNT(*)::int count FROM eco_missions WHERE created_by IS NOT NULL'),
+   query("SELECT COUNT(*)::int count FROM users WHERE role='school'")
+  ]);
+  res.render('clean-test-data',{title:'Очистка тестовых данных',preview:{schools:schools.rows[0].count,entries:entries.rows[0].count,news:newsCount.rows[0].count,missions:missions.rows[0].count,schoolUsers:schoolUsers.rows[0].count}});
+ }catch(e){next(e)}
+});
+app.post('/admin/clean-test-data',requireMainAdmin,async(req,res,next)=>{
+ if(req.body.confirm!=='ОЧИСТИТЬ')return redirectMsg(res,'/admin/clean-test-data','Для запуска введите слово ОЧИСТИТЬ.');
+ const client=await pool.connect();
+ try{
+  await client.query('BEGIN');
+  const before=await client.query("SELECT (SELECT COUNT(*)::int FROM schools) schools,(SELECT COUNT(*)::int FROM collection_entries) entries,(SELECT COUNT(*)::int FROM news) news,(SELECT COUNT(*)::int FROM eco_missions WHERE created_by IS NOT NULL) missions,(SELECT COUNT(*)::int FROM users WHERE role='school') school_users");
+  await client.query('DELETE FROM news');
+  await client.query('DELETE FROM eco_missions WHERE created_by IS NOT NULL');
+  await client.query('DELETE FROM documents WHERE school_id IS NOT NULL');
+  await client.query('DELETE FROM schools');
+  await client.query("DELETE FROM users WHERE role='school'");
+  await client.query('INSERT INTO audit_log(actor_id,action,entity,details) VALUES($1,$2,$3,$4::jsonb)',[req.session.user.id,'clean_test_data','database',JSON.stringify(before.rows[0])]);
+  await client.query('COMMIT');
+  res.redirect('/admin/clean-test-data?message='+encodeURIComponent('Тестовые данные удалены. Аккаунт администратора и настройки платформы сохранены.'));
+ }catch(e){await client.query('ROLLBACK').catch(()=>{});next(e)}finally{client.release()}
+});
 app.get('/city-builder',(req,res)=>res.render('city-builder',{title:'Город будущего'}));
 app.use((req,res)=>res.status(404).render('error',{title:'Страница не найдена',message:'Такой страницы нет. Проверьте адрес или вернитесь на главную.'}));
 app.use((err,req,res,next)=>{console.error(err);if(res.headersSent)return next(err);res.status(500).render('error',{title:'Ошибка сервера',message:process.env.NODE_ENV==='production'?'Произошла ошибка. Попробуйте позже.':err.message});});

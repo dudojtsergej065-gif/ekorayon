@@ -1010,3 +1010,5 @@ th,td{border-bottom-color:#29483e!important}
 @media(max-width:760px){.future-hero{grid-template-columns:1fr}.future-hero-art{min-height:180px}.future-hero-art>span{font-size:90px}.future-hero-art i{width:160px;height:160px}.future-career-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.future-career-grid,.future-options{grid-template-columns:1fr}.future-career-grid p{min-height:0}.future-hero{padding:23px 18px}}
 @media(prefers-reduced-motion:reduce){.future-hero-art>span,.future-hero-art i,.future-career-grid article{animation:none!important;transition:none!important}}
+
+.earth-analytics-link{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid rgba(147,255,190,.35);border-radius:999px;color:#c9ffe0;font-size:11px;font-weight:800}.earth-analytics-link:hover{background:rgba(95,255,166,.1);color:#fff}

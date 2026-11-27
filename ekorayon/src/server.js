@@ -114,7 +114,7 @@ app.get('/missions',async(req,res,next)=>{try{
  const sid=req.session.user?.role==='school'?req.session.user.school_id:null;
  const r=await query(`SELECT m.*,ms.status submission_status FROM eco_missions m LEFT JOIN mission_submissions ms ON ms.mission_id=m.id AND ms.school_id=$1 WHERE m.active=true AND m.starts_on<=CURRENT_DATE AND (m.ends_on IS NULL OR m.ends_on>=CURRENT_DATE) ORDER BY m.ends_on NULLS LAST,m.created_at DESC`,[sid]);
  const all=req.session.user&&['admin','staff'].includes(req.session.user.role)?await query('SELECT ms.*,m.title_ru,s.name school_name FROM mission_submissions ms JOIN eco_missions m ON m.id=ms.mission_id JOIN schools s ON s.id=ms.school_id ORDER BY ms.created_at DESC LIMIT 50'): {rows:[]};
- res.render('missions',{title:req.session.lang==='by'?'Эказаданні':'Экозадания',missions:r.rows,submissions:all.rows});
+ res.render('missions',{title:req.session.lang==='by'?'Эказаданні':'Экозадания',missions:r.rows,submissions:all.rows,adminMode:false});
  }catch(e){next(e)}});
 app.post('/missions/:id/join',requireSchool,async(req,res,next)=>{try{
  const m=await query('SELECT id FROM eco_missions WHERE id=$1 AND active=true AND starts_on<=CURRENT_DATE AND (ends_on IS NULL OR ends_on>=CURRENT_DATE)',[req.params.id]);

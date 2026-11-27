@@ -15,4 +15,48 @@
  items.forEach(el=>observer.observe(el));
 })();
 </script>
+
+<script>
+(()=>{
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(reduced)return;
+ const layer=document.createElement('div');layer.id='eco-motion-layer';layer.setAttribute('aria-hidden','true');
+ for(let i=0;i<18;i++){
+  const p=document.createElement('i');p.className='eco-dust';
+  p.style.setProperty('--x',(3+((i*37)%94))+'%');
+  p.style.setProperty('--size',(2+(i%3))+'px');
+  p.style.setProperty('--duration',(15+(i%9)*2)+'s');
+  p.style.setProperty('--delay',(-((i*7)%28))+'s');
+  p.style.setProperty('--drift',(((i%2)?1:-1)*(12+(i%5)*8))+'px');
+  p.style.setProperty('--alpha',(.18+(i%4)*.08).toFixed(2));
+  layer.appendChild(p);
+ }
+ document.body.prepend(layer);
+ const progress=document.createElement('div');progress.id='eco-scroll-progress';progress.setAttribute('aria-hidden','true');
+ progress.innerHTML='<span></span>';document.body.appendChild(progress);
+ const bar=progress.firstElementChild;
+ let ticking=false;
+ const updateProgress=()=>{
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  bar.style.width=(max>0?Math.min(100,window.scrollY/max*100):0)+'%';
+  ticking=false;
+ };
+ window.addEventListener('scroll',()=>{if(!ticking){ticking=true;window.requestAnimationFrame(updateProgress)}},{passive:true});
+ updateProgress();
+ const cards=document.querySelectorAll('.stat,.leader-card,.news-card,.school-card,.material-card,.panel,.quote-card,.city-bottom-grid article,.builder-panel,.builder-score');
+ if(window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+  cards.forEach(card=>{
+   card.classList.add('eco-spotlight','eco-depth');
+   card.addEventListener('pointermove',event=>{
+    const r=card.getBoundingClientRect(),x=event.clientX-r.left,y=event.clientY-r.top;
+    card.style.setProperty('--spot-x',x+'px');card.style.setProperty('--spot-y',y+'px');
+    const nx=(x/r.width-.5),ny=(y/r.height-.5);
+    card.style.setProperty('--tilt-x',(nx*3.2).toFixed(2)+'deg');
+    card.style.setProperty('--tilt-y',(-ny*3.2).toFixed(2)+'deg');
+   },{passive:true});
+   card.addEventListener('pointerleave',()=>{card.style.setProperty('--tilt-x','0deg');card.style.setProperty('--tilt-y','0deg')},{passive:true});
+  });
+ }
+})();
+</script>
 </body></html>

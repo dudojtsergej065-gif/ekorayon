@@ -1,52 +1,116 @@
 <%- include('partials/header') %>
-<section class="eco-builder">
- <div class="builder-top"><div><span class="builder-kicker">✦ ТВОРЧЕСКАЯ ЭКО-ЛАБОРАТОРИЯ</span><h1>ГОРОД <em>БУДУЩЕГО</em></h1><p>Ты — главный архитектор. Построй район, в котором хочется жить, дышать и мечтать.</p></div><div class="builder-stamp">🏙️<small>ТВОЙ ПРОЕКТ<br>ТВОИ ПРАВИЛА</small></div></div>
+<section class="eco-builder city-game">
+ <div class="builder-top"><div><span class="builder-kicker">✦ ЭКОРАЙОН · СИМУЛЯТОР БУДУЩЕГО</span><h1>ГОРОД <em>БУДУЩЕГО</em></h1><p>Построй живой город: заботься о жителях, планируй бюджет и находи баланс между технологиями и природой.</p></div><div class="builder-stamp">🏙️<small>ТВОЙ ГОРОД<br>ТВОИ РЕШЕНИЯ</small></div></div>
+ <div class="city-gamebar"><div class="city-mode"><span>РЕЖИМ</span><b id="cityModeName">Песочница</b><button id="cityModeToggle">Сменить режим ↗</button></div><div class="city-resource"><small>БЮДЖЕТ</small><b id="cityMoney">1 500</b><small>эко-монет</small></div><div class="city-resource"><small>ЖИТЕЛИ</small><b id="cityPeople">0</b><small>человек</small></div><div class="city-resource"><small>ХОД</small><b id="cityTurn">1</b><small>развитие</small></div><button class="city-event-btn" id="cityEvent">⚡ Случайное событие</button></div>
  <div class="builder-layout">
   <aside class="builder-sidebar">
-   <div class="builder-panel-head"><span>01 / ВЫБЕРИ ОБЪЕКТ</span><b>КАТАЛОГ</b></div>
+   <div class="builder-panel-head"><span>01 / СТРОИТЕЛЬСТВО</span><b>ОБЪЕКТЫ</b></div>
+   <div class="city-tool-tabs"><button class="active" data-tool-tab="build">Постройки</button><button data-tool-tab="infra">Инфраструктура</button></div>
    <div class="builder-palette" id="builderPalette">
-    <button class="build-item selected" data-type="tree"><span>🌳</span><b>Дерево</b><small>Зелёные зоны +</small></button>
-    <button class="build-item" data-type="park"><span>🌲</span><b>Парк</b><small>Природа +++</small></button>
-    <button class="build-item" data-type="house"><span>🏡</span><b>Эко-дом</b><small>Жильё +</small></button>
-    <button class="build-item" data-type="solar"><span>☀️</span><b>Солнечная станция</b><small>Чистая энергия +++</small></button>
-    <button class="build-item" data-type="wind"><span>🌬️</span><b>Ветряк</b><small>Чистая энергия ++</small></button>
-    <button class="build-item" data-type="bike"><span>🚲</span><b>Велопарковка</b><small>Мобильность ++</small></button>
-    <button class="build-item" data-type="recycle"><span>♻️</span><b>Экопункт</b><small>Переработка +++</small></button>
-    <button class="build-item" data-type="water"><span>💧</span><b>Пруд</b><small>Вода и жизнь ++</small></button>
-    <button class="build-item" data-type="school"><span>🏫</span><b>Эко-школа</b><small>Образование ++</small></button>
-    <button class="build-item" data-type="garden"><span>🥕</span><b>Огород</b><small>Локальная еда ++</small></button>
+    <button class="build-item selected" data-type="tree"><span>🌳</span><b>Дерево</b><small>60 монет · природа</small></button>
+    <button class="build-item" data-type="park"><span>🌲</span><b>Большой парк</b><small>180 монет · отдых</small></button>
+    <button class="build-item" data-type="house"><span>🏡</span><b>Эко-дом</b><small>220 монет · 12 жителей</small></button>
+    <button class="build-item" data-type="school"><span>🏫</span><b>Эко-школа</b><small>300 монет · образование</small></button>
+    <button class="build-item" data-type="solar"><span>☀️</span><b>Солнечная станция</b><small>260 монет · энергия</small></button>
+    <button class="build-item" data-type="wind"><span>🌬️</span><b>Ветрогенератор</b><small>230 монет · энергия</small></button>
+    <button class="build-item" data-type="recycle"><span>♻️</span><b>Экопункт</b><small>190 монет · переработка</small></button>
+    <button class="build-item" data-type="water"><span>💧</span><b>Пруд</b><small>150 монет · вода</small></button>
+    <button class="build-item" data-type="bike"><span>🚲</span><b>Велостанция</b><small>120 монет · транспорт</small></button>
+    <button class="build-item" data-type="garden"><span>🥕</span><b>Городской огород</b><small>130 монет · еда</small></button>
    </div>
-   <div class="builder-hint">💡 Выбери объект, затем нажми на клетку поля. Нажми на занятую клетку, чтобы убрать объект.</div>
+   <div class="builder-hint">Выбери объект и нажми на клетку. Постройки занимают место. Нажми на готовый объект, чтобы снести его и вернуть часть стоимости.</div>
   </aside>
   <main class="builder-main">
-   <div class="builder-board-head"><div><span>02 / ТВОЯ ТЕРРИТОРИЯ</span><h2>План района</h2></div><span class="builder-live"><i></i> РЕЖИМ СТРОИТЕЛЬСТВА</span></div>
-   <div class="builder-board-wrap"><div class="builder-board" id="builderBoard" role="grid" aria-label="Поле строительства района"></div></div>
-   <div class="builder-board-foot"><span>🟩 Свободная территория</span><span>Клик по объекту — убрать</span></div>
-   <div class="builder-actions"><button class="builder-reset" id="builderReset">↻ Начать заново</button><button class="builder-random" id="builderRandom">✦ Удиви меня</button></div>
+   <div class="builder-board-head"><div><span>02 / ТВОЯ ТЕРРИТОРИЯ</span><h2>План города</h2></div><span class="builder-live"><i></i> <b id="cityWeather">ЯСНО</b></span></div>
+   <div class="city-map-tools"><button class="active" data-tool="place">🏗️ Строить</button><button data-tool="road">🛣️ Дорога · 35</button><button data-tool="erase">🧹 Удалить</button><button id="cityNight">🌙 Ночной режим</button></div>
+   <div class="builder-board-wrap city-board-wrap"><div class="builder-board city-board" id="builderBoard" role="grid" aria-label="Поле строительства города"></div></div>
+   <div class="builder-board-foot"><span>🟩 Свободная земля</span><span>⬛ Дороги</span><span>Нажми на объект, чтобы убрать</span></div>
+   <div class="builder-actions"><button class="builder-reset" id="builderReset">↻ Новый город</button><button class="builder-random" id="builderRandom">✦ Создать случайный город</button></div>
+   <div class="city-toast" id="cityToast" aria-live="polite">Добро пожаловать, мэр! Построй первый объект.</div>
   </main>
-  <aside class="builder-score">
-   <div class="builder-panel-head"><span>03 / РЕЗУЛЬТАТ</span><b>ЭКОПАСПОРТ</b></div>
-   <div class="builder-score-orb"><div><strong id="builderScore">0</strong><small>ЭКО-ОЧКОВ</small></div></div>
-   <div class="builder-metrics"><div><span>🌿 Природа</span><b id="metricNature">0</b></div><div><span>⚡ Энергия</span><b id="metricEnergy">0</b></div><div><span>🚲 Мобильность</span><b id="metricMove">0</b></div><div><span>♻️ Цикличность</span><b id="metricCycle">0</b></div></div>
-   <div class="builder-rating"><span>ТВОЙ УРОВЕНЬ</span><b id="builderRank">Начинающий архитектор</b><p id="builderAdvice">Добавь первые объекты и создай свой зелёный уголок.</p></div>
-   <div class="builder-mission"><span>🎯 МИССИЯ АРХИТЕКТОРА</span><b id="builderMission">Создай парк и установи солнечную станцию.</b><small id="missionStatus">Выполни задание на своём поле!</small></div>
+  <aside class="builder-score city-dashboard">
+   <div class="builder-panel-head"><span>03 / СОСТОЯНИЕ</span><b>ПАНЕЛЬ МЭРА</b></div>
+   <div class="builder-score-orb"><div><strong id="builderScore">0</strong><small>ЭКО-РЕЙТИНГ</small></div></div>
+   <div class="city-meter"><div><span>🌿 Природа</span><b id="metricNature">0%</b></div><i><u id="barNature"></u></i></div>
+   <div class="city-meter"><div><span>⚡ Энергия</span><b id="metricEnergy">0%</b></div><i><u id="barEnergy"></u></i></div>
+   <div class="city-meter"><div><span>💧 Вода</span><b id="metricWater">0%</b></div><i><u id="barWater"></u></i></div>
+   <div class="city-meter"><div><span>♻️ Переработка</span><b id="metricCycle">0%</b></div><i><u id="barCycle"></u></i></div>
+   <div class="city-meter"><div><span>😊 Счастье</span><b id="metricJoy">0%</b></div><i><u id="barJoy"></u></i></div>
+   <div class="city-status"><span>СТАТУС ГОРОДА</span><b id="builderRank">Поселение мечты</b><p id="builderAdvice">Построй жильё, парк и источник чистой энергии.</p></div>
+   <div class="builder-mission"><span>🎯 ЗАДАНИЕ МЭРА</span><b id="builderMission">Создай город, в котором хочется жить.</b><small id="missionStatus">Цели появятся после первых построек.</small></div>
   </aside>
  </div>
- <div class="builder-bottom"><span>🌍 ЭКОРАЙОН · МАСТЕРСКАЯ БУДУЩЕГО</span><span>Это творческая игра. Результаты не сохраняются и не влияют на реальные рейтинги.</span></div>
+ <div class="city-bottom-grid"><article><span>📊</span><div><b>Умная экономика</b><p>Жители приносят небольшой доход каждый ход. Но городу нужны энергия, вода и забота.</p></div></article><article><span>🌦️</span><div><b>Непредсказуемый мир</b><p>События меняют условия. Готовься к испытаниям и используй возможности.</p></div></article><article><span>🏆</span><div><b>Твой личный рекорд</b><p>В конце оцени баланс города и попробуй улучшить результат в новой партии.</p></div></article></div>
+ <div class="builder-bottom"><span>🌍 ЭКОРАЙОН · МАСТЕРСКАЯ БУДУЩЕГО</span><span>Игровой эксперимент: прогресс не сохраняется и не влияет на реальные рейтинги ЭКОРАЙОНА.</span></div>
 </section>
 <script>
 (()=>{
  const board=document.getElementById('builderBoard');if(!board)return;
- const types={tree:{icon:'🌳',n:3},park:{icon:'🌲',n:7},house:{icon:'🏡',n:1},solar:{icon:'☀️',e:7},wind:{icon:'🌬️',e:5},bike:{icon:'🚲',m:6},recycle:{icon:'♻️',c:8},water:{icon:'💧',n:5},school:{icon:'🏫',m:2,n:1},garden:{icon:'🥕',n:3,c:2}};
- let selected='tree',cells=Array(80).fill(null),mission=0;
- const missions=[{text:'Создай парк и установи солнечную станцию.',test:a=>a.park>0&&a.solar>0},{text:'Построй эко-школу и экопункт.',test:a=>a.school>0&&a.recycle>0},{text:'Добавь минимум 5 деревьев.',test:a=>a.tree>=5},{text:'Создай район с чистой энергией: 2 станции или ветряка.',test:a=>a.solar+a.wind>=2},{text:'Построй огород и пруд.',test:a=>a.garden>0&&a.water>0}];
- function draw(){board.innerHTML='';cells.forEach((v,i)=>{const b=document.createElement('button');b.type='button';b.className='builder-cell'+(v?' occupied type-'+v:'');b.setAttribute('role','gridcell');b.setAttribute('aria-label',v?types[v].icon+' объект, нажми чтобы убрать':'Свободная клетка '+(i+1));b.textContent=v?types[v].icon:'';b.addEventListener('click',()=>{if(cells[i])cells[i]=null;else cells[i]=selected;draw();score()});board.appendChild(b)})}
- function score(){const a={tree:0,park:0,house:0,solar:0,wind:0,bike:0,recycle:0,water:0,school:0,garden:0};cells.filter(Boolean).forEach(x=>a[x]++);let n=a.tree*3+a.park*7+a.water*5+a.garden*3+a.school,e=a.solar*7+a.wind*5,m=a.bike*6+a.school*2,c=a.recycle*8+a.garden*2;const total=n+e+m+c+Math.min(30,a.park*3+a.recycle*2+a.solar*2);document.getElementById('builderScore').textContent=total;document.getElementById('metricNature').textContent=n;document.getElementById('metricEnergy').textContent=e;document.getElementById('metricMove').textContent=m;document.getElementById('metricCycle').textContent=c;let rank=total>=130?'Легенда экоархитектуры':total>=80?'Архитектор будущего':total>=40?'Зелёный проектировщик':total>=15?'Молодой архитектор':'Начинающий архитектор';document.getElementById('builderRank').textContent=rank;document.getElementById('builderAdvice').textContent=total>=80?'Невероятно! Твой район уже похож на город будущего.':total>=35?'Отличный старт! Добавь разнообразия и усили экологический баланс.':'Попробуй сочетать природу, чистую энергию и удобный транспорт.';const done=missionStatus(a);document.getElementById('builderMission').textContent=missions[mission].text;document.getElementById('missionStatus').textContent=done?'✓ МИССИЯ ВЫПОЛНЕНА! Отличная работа!':'Выполни задание на своём поле!'}
- function missionStatus(a){return missions[mission].test(a)}
- document.querySelectorAll('.build-item').forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.type;document.querySelectorAll('.build-item').forEach(x=>x.classList.toggle('selected',x===b))}));
- document.getElementById('builderReset').addEventListener('click',()=>{cells=Array(80).fill(null);mission=(mission+1)%missions.length;draw();score()});
- document.getElementById('builderRandom').addEventListener('click',()=>{const keys=Object.keys(types);cells=cells.map(()=>Math.random()<.48?keys[Math.floor(Math.random()*keys.length)]:null);mission=(mission+1)%missions.length;draw();score()});
- draw();score();
+ const defs={
+ tree:{icon:'🌳',cost:60,nature:9,joy:2},park:{icon:'🌲',cost:180,nature:22,joy:12,water:3},
+ house:{icon:'🏡',cost:220,people:12,joy:5,demand:2},school:{icon:'🏫',cost:300,people:0,joy:13,demand:2,nature:2},
+ solar:{icon:'☀️',cost:260,energy:24,joy:2},wind:{icon:'🌬️',cost:230,energy:19,joy:2},
+ recycle:{icon:'♻️',cost:190,cycle:28,joy:3},water:{icon:'💧',cost:150,water:22,nature:5,joy:4},
+ bike:{icon:'🚲',cost:120,mobility:18,joy:7},garden:{icon:'🥕',cost:130,food:12,nature:8,joy:5}
+ };
+ const missions=[
+ {name:'Зелёный старт',desc:'Построй парк и посади 2 дерева.',test:a=>a.park>=1&&a.tree>=2},
+ {name:'Энергия будущего',desc:'Установи солнечную станцию и ветрогенератор.',test:a=>a.solar>=1&&a.wind>=1},
+ {name:'Город для людей',desc:'Построй 2 эко-дома и школу.',test:a=>a.house>=2&&a.school>=1},
+ {name:'Ноль отходов',desc:'Построй 2 экопункта и городской огород.',test:a=>a.recycle>=2&&a.garden>=1},
+ {name:'Водный баланс',desc:'Создай 2 пруда и большой парк.',test:a=>a.water>=2&&a.park>=1}
+ ];
+ const events=[
+ {name:'Неделя экологического фестиваля',message:'Фестиваль вдохновил жителей! Счастье +12, бюджет +100.',money:100,joy:12},
+ {name:'Солнечная погода',message:'Солнечная погода помогла энергетике! Энергия +15.',energy:15},
+ {name:'Сильный ливень',message:'Ливень наполнил водоёмы. Вода +18, но счастье −3.',water:18,joy:-3},
+ {name:'День переработки',message:'Жители активно сортируют отходы. Переработка +18.',cycle:18},
+ {name:'Городской праздник',message:'Праздник объединил район! Счастье +15.',joy:15},
+ {name:'Жаркая неделя',message:'Жителям нужна тень и вода. Если мало парков и прудов, счастье снизится.',heat:true}
+ ];
+ let cells=Array(80).fill(null),selected='tree',tool='place',budget=1500,turn=1,mode=0,night=false,missionIndex=0,boost={energy:0,water:0,cycle:0,joy:0},weather='ЯСНО',lastEvent=-1;
+ const $=id=>document.getElementById(id);
+ function counts(){const a={};Object.keys(defs).forEach(k=>a[k]=0);cells.forEach(x=>{if(x&&x.type)a[x.type]++});return a}
+ function toast(s){$('cityToast').textContent=s}
+ function draw(){board.innerHTML='';cells.forEach((v,i)=>{const b=document.createElement('button');b.type='button';b.className='builder-cell city-cell'+(v?(v.road?' road':' occupied type-'+v.type):'');b.setAttribute('role','gridcell');b.setAttribute('aria-label',v?(v.road?'Дорога':defs[v.type].icon+' '+v.type):'Свободная клетка');b.textContent=v?(v.road?'':defs[v.type].icon):'';b.addEventListener('click',()=>act(i));board.appendChild(b)})}
+ function act(i){const old=cells[i];if(tool==='erase'){if(old){budget+=old.road?15:Math.floor(defs[old.type].cost*.45);cells[i]=null;toast('Объект удалён. Часть стоимости возвращена в бюджет.')}else return}
+ else if(tool==='road'){if(old){toast('Эта клетка уже занята.');return}if(budget<35){toast('Недостаточно монет для дороги.');return}budget-=35;cells[i]={road:true}}
+ else if(old){budget+=old.road?15:Math.floor(defs[old.type].cost*.45);cells[i]=null;toast('Постройка демонтирована. Часть средств возвращена.')}
+ else{const d=defs[selected];if(budget<d.cost){toast('Не хватает монет! Выбери более доступный объект или получи доход от жителей.');return}budget-=d.cost;cells[i]={type:selected};toast(d.icon+' Построено: '+selected+'. Город развивается!')}
+ draw();update()}
+ function clamp(x){return Math.max(0,Math.min(100,Math.round(x)))}
+ function update(){const a=counts(),roads=cells.filter(x=>x&&x.road).length,buildings=Object.values(a).reduce((x,y)=>x+y,0),people=a.house*12;
+ const nature=clamp(12+a.tree*7+a.park*18+a.garden*7+a.water*4-a.house*2);
+ const energy=clamp(18+a.solar*23+a.wind*19-a.house*5);
+ const water=clamp(45+a.water*17+a.park*2-a.house*3+boost.water);
+ const cycle=clamp(8+a.recycle*27+a.garden*4+boost.cycle);
+ const mobility=clamp(10+a.bike*18+Math.min(roads,15)*3);
+ const joy=clamp(25+a.park*9+a.school*8+a.bike*4+a.water*4+a.garden*3+a.house*2+boost.joy-Math.max(0,people-24)*.8);
+ const services=clamp(20+a.school*18+a.recycle*9+a.garden*5);
+ const score=clamp((nature+energy+water+cycle+mobility+joy+services)/7);
+ const values={Nature:nature,Energy:energy,Water:water,Cycle:cycle,Joy:joy};
+ Object.entries(values).forEach(([k,v])=>{$('metric'+k).textContent=v+'%';$('bar'+k).style.width=v+'%'});
+ $('builderScore').textContent=score;$('cityMoney').textContent=budget.toLocaleString('ru-RU');$('cityPeople').textContent=people.toLocaleString('ru-RU');$('cityTurn').textContent=turn;
+ $('builderRank').textContent=score>=85?'Экополис мечты':score>=70?'Город будущего':score>=50?'Зелёный мегаполис':score>=30?'Растущий район':'Молодое поселение';
+ $('builderAdvice').textContent=energy<35?'Не хватает чистой энергии — добавь солнечные станции или ветряки.':water<40?'Городу нужна вода — построй пруды и парки.':joy<45?'Подумай о жителях: добавь парки, школы и велостанции.':nature<45?'Увеличь зелёные зоны и посади деревья.':'Хороший баланс! Продолжай развивать город.';
+ $('builderMission').textContent=missions[missionIndex].desc;$('missionStatus').textContent=missions[missionIndex].test(a)?'✓ ЗАДАНИЕ ВЫПОЛНЕНО! Ты справился!':'Выполни условия на карте.';
+ $('cityModeName').textContent=mode?'Кампания':'Песочница';$('cityModeToggle').textContent=mode?'Перейти в песочницу':'Начать кампанию ↗';
+ }
+ function endTurn(){turn++;const a=counts();const people=a.house*12;const power=a.solar*24+a.wind*19,need=people*1.1;const income=people*4+40;budget+=income;if(power<need)boost.joy-=3;else boost.joy=Math.min(15,boost.joy+1);if(people>0&&a.water===0)boost.joy-=3;update();toast('Ход '+turn+': жители принесли '+income+' монет. '+(power<need?'Внимание: не хватает энергии!':'Энергоснабжение в норме.'))}
+ function randomEvent(){let idx=Math.floor(Math.random()*events.length);if(events.length>1&&idx===lastEvent)idx=(idx+1)%events.length;lastEvent=idx;const e=events[idx];if(e.money)budget+=e.money;if(e.energy)boost.energy+=e.energy;if(e.water)boost.water+=e.water;if(e.cycle)boost.cycle+=e.cycle;if(e.joy)boost.joy+=e.joy;if(e.heat){const a=counts();if(a.park+a.tree<3||a.water<1)boost.joy-=12;else boost.joy+=5}weather=e.name.toUpperCase();$('cityWeather').textContent=weather;update();toast('🌦️ '+e.message)}
+ function reset(){cells=Array(80).fill(null);budget=1500;turn=1;boost={energy:0,water:0,cycle:0,joy:0};weather='ЯСНО';$('cityWeather').textContent=weather;draw();update();toast('Новый город готов! Ты снова мэр.')}
+ document.querySelectorAll('.build-item').forEach(b=>b.addEventListener('click',()=>{selected=b.dataset.type;tool='place';document.querySelectorAll('.build-item').forEach(x=>x.classList.toggle('selected',x===b));document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x.dataset.tool==='place'))}));
+ document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{tool=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x===b));toast(tool==='road'?'Режим дорог: проложи улицы по свободным клеткам.':tool==='erase'?'Режим удаления: нажимай на объекты.':'Режим строительства: выбери постройку слева.')}))
+ document.querySelectorAll('[data-tool-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tool-tab]').forEach(x=>x.classList.toggle('active',x===b));toast(b.dataset.toolTab==='infra'?'Инфраструктура: используй инструменты дорог и удаления над картой.':'Выбирай здания и объекты в каталоге.')}))
+ $('builderReset').addEventListener('click',reset);
+ $('builderRandom').addEventListener('click',()=>{reset();const keys=Object.keys(defs);for(let i=0;i<80;i++)if(Math.random()<.35){const k=keys[Math.floor(Math.random()*keys.length)];if(budget>=defs[k].cost){cells[i]={type:k};budget-=defs[k].cost}}draw();update();toast('✨ Случайный город создан! Изучи его и попробуй улучшить.')});
+ $('cityEvent').addEventListener('click',randomEvent);
+ $('cityModeToggle').addEventListener('click',()=>{mode=1-mode;missionIndex=(missionIndex+1)%missions.length;update();toast(mode?'Кампания включена! Выполни задание мэра.':'Свободная песочница: строй без ограничений по задачам.')});
+ $('cityNight').addEventListener('click',()=>{night=!night;document.querySelector('.city-game').classList.toggle('night-city',night);$('cityNight').textContent=night?'☀️ Дневной режим':'🌙 Ночной режим'});
+ board.addEventListener('dblclick',endTurn);
+ draw();update();
+ // Advance the city economy with an explicit turn button, never automatically.
+ const turnBtn=document.createElement('button');turnBtn.className='city-turn-btn';turnBtn.textContent='⏭ Завершить ход · получить доход';turnBtn.addEventListener('click',endTurn);document.querySelector('.city-map-tools').appendChild(turnBtn);
 })();
 </script>
 <%- include('partials/footer') %>

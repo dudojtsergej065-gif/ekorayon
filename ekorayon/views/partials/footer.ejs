@@ -1,1 +1,18 @@
-</main><footer class="footer"><div class="footer-inner"><div><strong>ЭКОРАЙОН</strong><p><%= t('Вместе сохраняем будущее!','Разам захоўваем будучыню!') %></p></div><div class="footer-links"><a href="/rules"><%= t('Правила участия','Правілы ўдзелу') %></a><a href="/help-info"><%= t('Полезная информация','Карысная інфармацыя') %></a><a href="/feedback"><%= t('Обратная связь','Зваротная сувязь') %></a><a href="/register-school"><%= t('Регистрация школы','Рэгістрацыя школы') %></a></div><small>© <%= new Date().getFullYear() %> ЭКОРАЙОН</small></div></footer></body></html>
+</main><footer class="footer"><div class="footer-inner"><div><strong>ЭКОРАЙОН</strong><p><%= t('Вместе сохраняем будущее!','Разам захоўваем будучыню!') %></p></div><div class="footer-links"><a href="/rules"><%= t('Правила участия','Правілы ўдзелу') %></a><a href="/help-info"><%= t('Полезная информация','Карысная інфармацыя') %></a><a href="/feedback"><%= t('Обратная связь','Зваротная сувязь') %></a><a href="/register-school"><%= t('Регистрация школы','Рэгістрацыя школы') %></a></div><small>© <%= new Date().getFullYear() %> ЭКОРАЙОН</small></div></footer>
+<script>
+(()=>{
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(reduce)return;
+ const selector='.container > .hero,.container > .stats-grid,.container > .section,.container > .page-head,.container > .panel,.container > .form-wrap,.container > .eco-builder,.container > .detail-grid,.container > .school-grid,.container > .leader-grid,.container > .news-grid,.container > .material-grid,.container > .table-wrap,.container > .quote-card,.stats-grid > *, .leader-grid > *, .news-grid > *, .school-grid > *, .material-grid > *, .detail-grid > *, .city-bottom-grid > *, .eco-builder > .builder-top,.eco-builder > .builder-layout,.eco-builder > .city-bottom-grid';
+ const items=[...document.querySelectorAll(selector)];
+ if(!items.length||!('IntersectionObserver'in window))return;
+ items.forEach((el,i)=>{el.classList.add('motion-reveal');el.style.setProperty('--reveal-delay',((i%5)*65)+'ms')});
+ const observer=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+   if(entry.isIntersecting){entry.target.classList.add('is-visible');observer.unobserve(entry.target)}
+  });
+ },{threshold:.08,rootMargin:'0px 0px -35px 0px'});
+ items.forEach(el=>observer.observe(el));
+})();
+</script>
+</body></html>

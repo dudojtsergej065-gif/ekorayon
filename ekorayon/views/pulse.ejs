@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+<section class="pulse-hero">
+  <div class="pulse-hero-glow"></div>
+  <div class="pulse-hero-copy">
+    <span class="pulse-kicker"><i></i> ЭКОРАЙОН · ЖИВАЯ ЛЕНТА</span>
+    <h1>ПУЛЬС <em>ЭКОРАЙОНА</em></h1>
+    <p>Здесь видны реальные экологические достижения школ района. Каждый подтверждённый результат становится частью общей истории.</p>
+    <div class="pulse-live-label"><span class="pulse-live-dot"></span> ЛЕНТА РЕАЛЬНЫХ СОБЫТИЙ</div>
+  </div>
+  <div class="pulse-orbit-art" aria-hidden="true"><div class="pulse-orbit-ring ring-one"></div><div class="pulse-orbit-ring ring-two"></div><div class="pulse-core">🌍</div><span class="pulse-satellite satellite-one">♻</span><span class="pulse-satellite satellite-two">🌱</span><span class="pulse-satellite satellite-three">✦</span></div>
+</section>
+<section class="pulse-stats">
+  <div class="pulse-stat"><span>🏫</span><small>ШКОЛЫ В ДВИЖЕНИИ</small><strong><%= Number(stats.schools).toLocaleString('ru-RU') %></strong></div>
+  <div class="pulse-stat"><span>♻️</span><small>ПОДТВЕРЖДЁННЫЕ СБОРЫ</small><strong><%= Number(stats.collections).toLocaleString('ru-RU') %></strong></div>
+  <div class="pulse-stat"><span>🌿</span><small>СОБРАНО ВТОРСЫРЬЯ</small><strong><%= Number(stats.kilograms).toLocaleString('ru-RU') %> <small>кг</small></strong></div>
+  <div class="pulse-stat"><span>⚡</span><small>ВЫПОЛНЕНО МИССИЙ</small><strong><%= Number(stats.missions).toLocaleString('ru-RU') %></strong></div>
+</section>
+<section class="pulse-feed-section">
+  <div class="pulse-feed-heading"><div><span class="eyebrow">ХРОНИКА ПЕРЕМЕН</span><h2>Что происходит в районе?</h2><p>События появляются после подтверждения результата или публикации новости.</p></div><span class="pulse-feed-count"><b><%= events.length %></b> событий</span></div>
+  <nav class="pulse-filters" aria-label="Фильтр событий">
+    <a class="<%= activeType==='all'?'active':'' %>" href="/pulse">Все события</a>
+    <a class="<%= activeType==='collection'?'active':'' %>" href="/pulse?type=collection">♻ Сборы</a>
+    <a class="<%= activeType==='mission'?'active':'' %>" href="/pulse?type=mission">⚡ Миссии</a>
+    <a class="<%= activeType==='achievement'?'active':'' %>" href="/pulse?type=achievement">🏆 Достижения</a>
+    <a class="<%= activeType==='news'?'active':'' %>" href="/pulse?type=news">📣 Новости</a>
+  </nav>
+  <% if(events.length){ %>
+  <div class="pulse-timeline">
+    <% events.forEach((event,i)=>{ const icons={collection:'♻',mission:'⚡',achievement:'🏆',news:'📣'}; const labels={collection:'ПОДТВЕРЖДЁННЫЙ СБОР',mission:'ЭКОМИССИЯ',achievement:'ДОСТИЖЕНИЕ',news:'НОВОСТЬ'}; %>
+    <article class="pulse-event pulse-event-<%= event.kind %>">
+      <div class="pulse-event-marker"><span><%= icons[event.kind]||'🌱' %></span></div>
+      <div class="pulse-event-card">
+        <div class="pulse-event-top"><span class="pulse-event-type"><%= labels[event.kind]||'СОБЫТИЕ' %></span><time datetime="<%= new Date(event.happened_at).toISOString() %>"><%= new Date(event.happened_at).toLocaleString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></time></div>
+        <h3><%= event.title %></h3>
+        <p><%= event.detail %></p>
+        <div class="pulse-event-bottom"><span>🏫 <%= event.school_name %></span><a href="<%= event.url %>">Подробнее <b>↗</b></a></div>
+      </div>
+    </article>
+    <% }) %>
+  </div>
+  <% }else{ %>
+  <div class="pulse-empty"><span>🌱</span><h3>Новые события уже на подходе</h3><p>Когда школы получат подтверждение результатов или администрация опубликует новости, они появятся здесь.</p><a class="btn primary" href="/missions">Посмотреть экомиссии ↗</a></div>
+  <% } %>
+  <div class="pulse-note">🔎 В ленте отображаются подтверждённые сборы, одобренные миссии, полученные достижения и опубликованные новости. Черновики и результаты на проверке не показываются.</div>
+</section>
+<%- include('partials/footer') %>

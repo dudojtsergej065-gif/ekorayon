@@ -923,3 +923,22 @@ th,td{border-bottom-color:#29483e!important}
 @media(prefers-reduced-motion:reduce){
   .topbar .nav a,.topbar .login-link{transition:none!important}
 }
+
+
+/* ЭКОМИР — читаемые заголовки разделов на тёмном фоне */
+.eu-section-head h2,
+.eu-section-head h2 a,
+.eu-admin-panel h2{
+  color:#effff7!important;
+  text-shadow:0 2px 18px rgba(77,239,174,.13);
+}
+.eu-section-head p{
+  color:#b8d2c6!important;
+}
+.eu-section-head .eu-eyebrow,
+.eu-section-head .eu-eyebrow *{
+  color:#70efb7!important;
+}
+#passport .eu-section-head h2{
+  color:#f2fff8!important;
+}

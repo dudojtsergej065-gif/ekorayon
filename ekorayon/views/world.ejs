@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+<section class="world-page">
+ <div class="world-hero">
+  <span class="world-kicker">🌌 <%= t('ОБЩИЙ МИР ЭКОРАЙОНА','АГУЛЬНЫ СВЕТ ЭКАРАЁНА') %></span>
+  <h1><%= t('Мир, который мы создаём вместе','Свет, які мы ствараем разам') %></h1>
+  <p><%= t('Каждый подтверждённый килограмм помогает нашему виртуальному миру расти. Школы района меняют его вместе!','Кожны пацверджаны кілаграм дапамагае нашаму віртуальнаму свету расці. Школы раёна змяняюць яго разам!') %></p>
+  <div class="world-orb-wrap"><div class="world-orb"><span>🌍</span><i></i></div><div class="world-orbit"></div><b><%= Number(totals.kg).toLocaleString('ru-RU') %> кг</b></div>
+ </div>
+ <div class="world-level panel">
+  <div class="world-level-heading"><div><small><%= t('ТЕКУЩАЯ ЭПОХА','БЯГУЧАЯ ЭПОХА') %></small><h2><%= lang==='by'?current.nameBy:current.name %></h2><p><%= lang==='by'?current.descBy:current.desc %></p></div><strong><%= current.icon %></strong></div>
+  <% if(next){ %><div class="world-progress-label"><span><%= t('До следующего открытия','Да наступнага адкрыцця') %>: <b><%= lang==='by'?next.nameBy:next.name %></b></span><b><%= Math.round(progress) %>%</b></div><div class="world-progress"><i style="width:<%= progress %>%"></i></div><small><%= Math.max(0,Number(next.kg)-Number(totals.kg)).toLocaleString('ru-RU') %> кг <%= t('до новой эпохи','да новай эпохі') %></small><% }else{ %><div class="world-complete">✨ <%= t('Легендарный уровень открыт!','Легендарны ўзровень адкрыты!') %></div><% } %>
+ </div>
+ <section class="world-map-section"><div class="section-head"><div><small><%= t('КАРТА РАЗВИТИЯ','КАРТА РАЗВІЦЦЯ') %></small><h2><%= t('Как меняется наш мир','Як змяняецца наш свет') %></h2></div><span class="world-live">● <%= t('Обновляется по подтверждённым данным','Абнаўляецца па пацверджаных даных') %></span></div>
+  <div class="world-zones"><% stages.forEach((s,i)=>{const unlocked=Number(totals.kg)>=s.kg;%><article class="world-zone <%= unlocked?'unlocked':'locked' %>"><span class="zone-icon"><%= unlocked?s.icon:'🔒' %></span><small><%= t('ЭПОХА','ЭПОХА') %> <%= i+1 %></small><h3><%= lang==='by'?s.nameBy:s.name %></h3><p><%= lang==='by'?s.descBy:s.desc %></p><b><%= Number(s.kg).toLocaleString('ru-RU') %> кг</b></article><% }) %></div>
+ </section>
+ <section class="world-leaders"><div class="section-head"><div><small><%= t('СОЗДАТЕЛИ МИРА','СТВАРАЛЬНІКІ СВЕТУ') %></small><h2><%= t('Самые активные команды','Самыя актыўныя каманды') %></h2></div><a href="/battles"><%= t('Эко-баттлы →','Эка-батлы →') %></a></div>
+ <div class="hall-list"><% leaders.forEach((s,i)=>{const avatars={sprout:'🌱',fox:'🦊',owl:'🦉',wolf:'🐺',dragon:'🐉',phoenix:'🔥'};%><a class="hall-row" href="/schools/<%= s.id %>"><span class="hall-rank"><%= i===0?'👑':i+1 %></span><span class="world-team-avatar"><%= avatars[s.avatar_code]||'🌱' %></span><b><%= s.name %></b><strong><%= Number(s.kg).toLocaleString('ru-RU') %> кг</strong></a><% }) %></div></section>
+</section>
+<%- include('partials/footer') %>

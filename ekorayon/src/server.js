@@ -86,6 +86,64 @@ app.get('/schools/:id',async(req,res,next)=>{try{const s=await query('SELECT * F
 app.get('/ratings',async(req,res,next)=>{try{const [r,m,classes,monthly,yearly,pointSchools]=await Promise.all([query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE s.status='active' GROUP BY s.id ORDER BY total DESC,s.name`),query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.status IN ('pending','approved') GROUP BY m.code,m.name ORDER BY total DESC`),query(`SELECT c.id,c.name class_name,s.id school_id,s.name school_name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM classes c JOIN schools s ON s.id=c.school_id LEFT JOIN collection_entries e ON e.class_id=c.id AND e.status IN ('pending','approved') WHERE c.active AND s.status='active' GROUP BY c.id,s.id ORDER BY total DESC,c.name`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('month',e.period_month)=date_trunc('month',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('year',e.period_month)=date_trunc('year',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(l.points),0)::numeric(14,2) points FROM schools s LEFT JOIN point_ledger l ON l.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY points DESC,s.name`)]);res.render('ratings',{title:'Рейтинги',schools:r.rows,materials:m.rows,classes:classes.rows,monthly:monthly.rows,yearly:yearly.rows,pointSchools:pointSchools.rows});}catch(e){next(e)}});
 app.get('/search',async(req,res,next)=>{try{const term=(req.query.q||'').trim();if(!term)return res.render('search',{title:'Поиск',term,results:[]});const like='%'+term+'%';const r=await query(`SELECT * FROM (SELECT 'school' type,id,title,subtitle,url FROM (SELECT id,name title,COALESCE(locality,'') subtitle,'/schools/'||id url FROM schools WHERE status='active' AND (name ILIKE $1 OR locality ILIKE $1)) a UNION ALL SELECT 'news',id,title,category,'/news/'||id FROM news WHERE status='published' AND (title ILIKE $1 OR body ILIKE $1) UNION ALL SELECT 'class',c.id,c.name,s.name,'/schools/'||s.id FROM classes c JOIN schools s ON s.id=c.school_id WHERE c.active AND (c.name ILIKE $1 OR s.name ILIKE $1)) x ORDER BY title LIMIT 50`,[like]);res.render('search',{title:'Поиск',term,results:r.rows});}catch(e){next(e)}});
 app.get('/news-list',async(req,res,next)=>{try{const r=await query("SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.status='published' ORDER BY n.created_at DESC");res.render('news-list',{title:'Новости и мероприятия',items:r.rows});}catch(e){next(e)}});
+
+app.get('/missions',async(req,res,next)=>{try{
+ const sid=req.session.user?.role==='school'?req.session.user.school_id:null;
+ const r=await query(`SELECT m.*,ms.status submission_status FROM eco_missions m LEFT JOIN mission_submissions ms ON ms.mission_id=m.id AND ms.school_id=$1 WHERE m.active=true AND m.starts_on<=CURRENT_DATE AND (m.ends_on IS NULL OR m.ends_on>=CURRENT_DATE) ORDER BY m.ends_on NULLS LAST,m.created_at DESC`,[sid]);
+ const all=req.session.user&&['admin','staff'].includes(req.session.user.role)?await query('SELECT ms.*,m.title_ru,s.name school_name FROM mission_submissions ms JOIN eco_missions m ON m.id=ms.mission_id JOIN schools s ON s.id=ms.school_id ORDER BY ms.created_at DESC LIMIT 50'): {rows:[]};
+ res.render('missions',{title:req.session.lang==='by'?'Эказаданні':'Экозадания',missions:r.rows,submissions:all.rows});
+ }catch(e){next(e)}});
+app.post('/missions/:id/join',requireSchool,async(req,res,next)=>{try{
+ const m=await query('SELECT id FROM eco_missions WHERE id=$1 AND active=true AND starts_on<=CURRENT_DATE AND (ends_on IS NULL OR ends_on>=CURRENT_DATE)',[req.params.id]);
+ if(!m.rowCount)return redirectMsg(res,'/missions','Задание уже недоступно.');
+ await query('INSERT INTO mission_submissions(mission_id,school_id,note) VALUES($1,$2,$3) ON CONFLICT(mission_id,school_id) DO NOTHING',[req.params.id,req.session.user.school_id,(req.body.note||'').trim()||null]);
+ res.redirect('/missions?message='+encodeURIComponent('Участие отправлено администрации на проверку.'));
+ }catch(e){next(e)}});
+app.get('/admin/missions',requireAdmin,async(req,res,next)=>{try{
+ const [missions,submissions]=await Promise.all([query('SELECT * FROM eco_missions ORDER BY created_at DESC'),query(`SELECT ms.*,m.title_ru,s.name school_name FROM mission_submissions ms JOIN eco_missions m ON m.id=ms.mission_id JOIN schools s ON s.id=ms.school_id ORDER BY ms.created_at DESC LIMIT 100`)]);
+ res.render('missions',{title:'Управление экозаданиями',missions:missions.rows,submissions:submissions.rows,adminMode:true});
+ }catch(e){next(e)}});
+app.post('/admin/missions',requireAdmin,async(req,res,next)=>{try{
+ const {title_ru,title_by,description_ru,description_by,points,starts_on,ends_on}=req.body;
+ const p=Number(points);
+ if(!title_ru||!title_by||!description_ru||!description_by||!Number.isInteger(p)||p<0||p>10000)return redirectMsg(res,'/admin/missions','Заполните названия и описания на двух языках, баллы укажите от 0 до 10000.');
+ await query('INSERT INTO eco_missions(title_ru,title_by,description_ru,description_by,points,starts_on,ends_on,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[title_ru,title_by,description_ru,description_by,p,starts_on||new Date().toISOString().slice(0,10),ends_on||null,req.session.user.id]);
+ res.redirect('/admin/missions?message='+encodeURIComponent('Экозадание опубликовано.'));
+ }catch(e){next(e)}});
+app.post('/admin/missions/:id/review',requireAdmin,async(req,res,next)=>{try{
+ const status=req.body.status;
+ if(!['approved','rejected'].includes(status))return redirectMsg(res,'/admin/missions','Недопустимый статус.');
+ const r=await query("UPDATE mission_submissions SET status=$1,reviewed_by=$2 WHERE id=$3 AND status='pending' RETURNING mission_id,school_id",[status,req.session.user.id,req.params.id]);
+ if(r.rowCount&&status==='approved'){
+  const m=await query('SELECT title_ru,points FROM eco_missions WHERE id=$1',[r.rows[0].mission_id]);
+  if(m.rowCount&&Number(m.rows[0].points)>0)await query("INSERT INTO point_ledger(school_id,kind,points,reason,created_by) VALUES($1,'event',$2,$3,$4)",[r.rows[0].school_id,m.rows[0].points,'Выполнение экозадания: '+m.rows[0].title_ru,req.session.user.id]);
+  await notify({schoolId:r.rows[0].school_id,title:'Экозадание проверено',body:'Участие подтверждено. Дополнительные баллы начислены.'});
+ }
+ res.redirect('/admin/missions?message='+encodeURIComponent('Результат проверки сохранён.'));
+ }catch(e){next(e)}});
+app.post('/admin/missions/:id/status',requireAdmin,async(req,res,next)=>{try{await query('UPDATE eco_missions SET active=$1 WHERE id=$2',[req.body.active==='true',req.params.id]);res.redirect('/admin/missions');}catch(e){next(e)}});
+app.get('/achievements',async(req,res,next)=>{try{
+ const r=await query(`SELECT a.*,COUNT(sa.id)::int earned_count FROM eco_achievements a LEFT JOIN school_achievements sa ON sa.achievement_id=a.id GROUP BY a.id ORDER BY a.threshold_kg`);
+ const earned=await query(`SELECT sa.earned_at,a.title_ru,a.title_by,a.icon,s.name school_name FROM school_achievements sa JOIN eco_achievements a ON a.id=sa.achievement_id JOIN schools s ON s.id=sa.school_id ORDER BY sa.earned_at DESC LIMIT 60`);
+ res.render('achievements',{title:req.session.lang==='by'?'Дасягненні':'Достижения',items:r.rows,earned:earned.rows});
+ }catch(e){next(e)}});
+app.get('/hall-of-fame',async(req,res,next)=>{try{
+ const r=await query(`SELECT s.id,s.name,COUNT(sa.id)::int badges,COALESCE(SUM(l.points),0)::numeric(14,2) points,COALESCE(SUM(e.quantity) FILTER(WHERE e.status='approved'),0)::numeric(14,2) kg FROM schools s LEFT JOIN school_achievements sa ON sa.school_id=s.id LEFT JOIN point_ledger l ON l.school_id=s.id LEFT JOIN collection_entries e ON e.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY badges DESC,points DESC,kg DESC LIMIT 30`);
+ res.render('hall-of-fame',{title:req.session.lang==='by'?'Зала славы':'Зал славы',schools:r.rows});
+ }catch(e){next(e)}});
+app.get('/impact',async(req,res,next)=>{try{
+ const [totals,materials,events]=await Promise.all([
+ query(`SELECT COALESCE(SUM(e.quantity),0)::numeric(14,2) kg,COUNT(DISTINCT e.school_id)::int schools,COUNT(*) FILTER(WHERE e.status='approved')::int entries,COUNT(DISTINCT ms.school_id)::int mission_schools FROM collection_entries e LEFT JOIN mission_submissions ms ON ms.school_id=e.school_id WHERE e.status='approved'`),
+ query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.status='approved' GROUP BY m.code,m.name ORDER BY total DESC`),
+ query("SELECT COUNT(*)::int count FROM mission_submissions WHERE status='approved'")]);
+ res.render('impact',{title:req.session.lang==='by'?'Экалагічны вынік':'Экологический результат',totals:totals.rows[0],materials:materials.rows,events:events.rows[0]});
+ }catch(e){next(e)}});
+app.get('/seasons',async(req,res,next)=>{try{
+ const [month,year]=await Promise.all([
+ query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status='approved' AND date_trunc('month',e.period_month)=date_trunc('month',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 20`),
+ query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status='approved' AND date_trunc('year',e.period_month)=date_trunc('year',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 20`)]);
+ res.render('seasons',{title:req.session.lang==='by'?'Экасезоны':'Экосезоны',month:month.rows,year:year.rows});
+ }catch(e){next(e)}});
 app.get('/news/:id',async(req,res,next)=>{try{const r=await query(`SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.id=$1 AND n.status='published'`,[req.params.id]);if(!r.rowCount)return res.status(404).render('error',{title:'Не найдено',message:'Материал не найден.'});res.render('news-detail',{title:r.rows[0].title,item:r.rows[0]});}catch(e){next(e)}});
 
 // Login, registration request, feedback

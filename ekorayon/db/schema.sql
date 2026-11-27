@@ -193,3 +193,45 @@ CREATE TABLE IF NOT EXISTS certificates (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_certificates_school ON certificates(school_id,created_at DESC);
+
+
+-- Новые возможности ЭКОРАЙОН: задания, достижения, сезонные итоги.
+CREATE TABLE IF NOT EXISTS eco_missions (
+ id BIGSERIAL PRIMARY KEY,
+ title_ru TEXT NOT NULL,
+ title_by TEXT NOT NULL,
+ description_ru TEXT NOT NULL,
+ description_by TEXT NOT NULL,
+ points INTEGER NOT NULL DEFAULT 0 CHECK(points>=0),
+ starts_on DATE NOT NULL DEFAULT CURRENT_DATE,
+ ends_on DATE,
+ active BOOLEAN NOT NULL DEFAULT TRUE,
+ created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS eco_achievements (
+ id BIGSERIAL PRIMARY KEY,
+ code TEXT UNIQUE NOT NULL,
+ title_ru TEXT NOT NULL,
+ title_by TEXT NOT NULL,
+ description_ru TEXT NOT NULL,
+ description_by TEXT NOT NULL,
+ icon TEXT NOT NULL DEFAULT '🌱',
+ threshold_kg NUMERIC(14,2) NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS school_achievements (
+ id BIGSERIAL PRIMARY KEY,
+ school_id BIGINT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+ achievement_id BIGINT NOT NULL REFERENCES eco_achievements(id) ON DELETE CASCADE,
+ earned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ UNIQUE(school_id,achievement_id)
+);
+INSERT INTO eco_achievements(code,title_ru,title_by,description_ru,description_by,icon,threshold_kg) VALUES
+ ('first-steps','Первые шаги','Першыя крокі','Первые 10 кг вторсырья','Першыя 10 кг другаснай сыравіны','🌱',10),
+ ('eco-team','Эко-команда','Эка-каманда','Собрано 50 кг вторсырья','Сабрана 50 кг другаснай сыравіны','♻️',50),
+ ('green-school','Зелёная школа','Зялёная школа','Собрано 100 кг вторсырья','Сабрана 100 кг другаснай сыравіны','🌳',100),
+ ('eco-leader','Эко-лидер','Эка-лідар','Собрано 500 кг вторсырья','Сабрана 500 кг другаснай сыравіны','🏆',500),
+ ('planet-guardian','Хранители планеты','Ахоўнікі планеты','Собрано 1000 кг вторсырья','Сабрана 1000 кг другаснай сыравіны','🌍',1000)
+ON CONFLICT(code) DO NOTHING;
+CREATE INDEX IF NOT EXISTS idx_school_achievements ON school_achievements(school_id,earned_at DESC);
+CREATE INDEX IF NOT EXISTS idx_eco_missions_active ON eco_missions(active,starts_on,ends_on);

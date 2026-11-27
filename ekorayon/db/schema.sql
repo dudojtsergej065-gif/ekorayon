@@ -235,3 +235,14 @@ INSERT INTO eco_achievements(code,title_ru,title_by,description_ru,description_b
 ON CONFLICT(code) DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_school_achievements ON school_achievements(school_id,earned_at DESC);
 CREATE INDEX IF NOT EXISTS idx_eco_missions_active ON eco_missions(active,starts_on,ends_on);
+
+CREATE TABLE IF NOT EXISTS mission_submissions (
+ id BIGSERIAL PRIMARY KEY,
+ mission_id BIGINT NOT NULL REFERENCES eco_missions(id) ON DELETE CASCADE,
+ school_id BIGINT NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+ note TEXT,
+ status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+ reviewed_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ UNIQUE(mission_id,school_id)
+);

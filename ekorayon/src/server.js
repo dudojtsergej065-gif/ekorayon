@@ -9,6 +9,8 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const { pool, query } = require('./db');
 const app = express();
+// Railway terminates HTTPS at its reverse proxy. Trust the single proxy hop.
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
@@ -18,7 +20,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(__dirname + '/../public'));
 app.use(session({
-  store: new PgStore({ pool, tableName: 'session' }),
+  store: new PgStore({ pool, tableName: 'session', createTableIfMissing: true }),
   secret: process.env.SESSION_SECRET || 'development-only-change-me',
   resave: false, saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8 * 60 * 60 * 1000 }

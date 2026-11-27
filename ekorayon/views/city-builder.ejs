@@ -68,7 +68,7 @@
  {name:'Городской праздник',message:'Праздник объединил район! Счастье +15.',joy:15},
  {name:'Жаркая неделя',message:'Жителям нужна тень и вода. Если мало парков и прудов, счастье снизится.',heat:true}
  ];
- let cells=Array(80).fill(null),selected='tree',tool='place',budget=1500,turn=1,mode=0,night=false,missionIndex=0,boost={energy:0,water:0,cycle:0,joy:0},weather='ЯСНО',lastEvent=-1;
+ let cells=Array(80).fill(null),selected='tree',tool='place',budget=1500,turn=1,mode=0,night=false,missionIndex=0,missionClaimed=false,boost={energy:0,water:0,cycle:0,joy:0},weather='ЯСНО',lastEvent=-1;
  const $=id=>document.getElementById(id);
  function counts(){const a={};Object.keys(defs).forEach(k=>a[k]=0);cells.forEach(x=>{if(x&&x.type)a[x.type]++});return a}
  function toast(s){$('cityToast').textContent=s}
@@ -81,7 +81,7 @@
  function clamp(x){return Math.max(0,Math.min(100,Math.round(x)))}
  function update(){const a=counts(),roads=cells.filter(x=>x&&x.road).length,buildings=Object.values(a).reduce((x,y)=>x+y,0),people=a.house*12;
  const nature=clamp(12+a.tree*7+a.park*18+a.garden*7+a.water*4-a.house*2);
- const energy=clamp(18+a.solar*23+a.wind*19-a.house*5);
+ const energy=clamp(18+a.solar*23+a.wind*19+boost.energy-a.house*5);
  const water=clamp(45+a.water*17+a.park*2-a.house*3+boost.water);
  const cycle=clamp(8+a.recycle*27+a.garden*4+boost.cycle);
  const mobility=clamp(10+a.bike*18+Math.min(roads,15)*3);
@@ -93,7 +93,7 @@
  $('builderScore').textContent=score;$('cityMoney').textContent=budget.toLocaleString('ru-RU');$('cityPeople').textContent=people.toLocaleString('ru-RU');$('cityTurn').textContent=turn;
  $('builderRank').textContent=score>=85?'Экополис мечты':score>=70?'Город будущего':score>=50?'Зелёный мегаполис':score>=30?'Растущий район':'Молодое поселение';
  $('builderAdvice').textContent=energy<35?'Не хватает чистой энергии — добавь солнечные станции или ветряки.':water<40?'Городу нужна вода — построй пруды и парки.':joy<45?'Подумай о жителях: добавь парки, школы и велостанции.':nature<45?'Увеличь зелёные зоны и посади деревья.':'Хороший баланс! Продолжай развивать город.';
- $('builderMission').textContent=missions[missionIndex].desc;$('missionStatus').textContent=missions[missionIndex].test(a)?'✓ ЗАДАНИЕ ВЫПОЛНЕНО! Ты справился!':'Выполни условия на карте.';
+ $('builderMission').textContent=missions[missionIndex].desc;const missionDone=missions[missionIndex].test(a);$('missionStatus').textContent=missionDone?'✓ ЗАДАНИЕ ВЫПОЛНЕНО! Ты справился!':'Выполни условия на карте.';if(missionDone&&!missionClaimed){missionClaimed=true;budget+=250;$('cityMoney').textContent=budget.toLocaleString('ru-RU');toast('🏆 Задание выполнено! Награда мэра: +250 эко-монет.');}
  $('cityModeName').textContent=mode?'Кампания':'Песочница';$('cityModeToggle').textContent=mode?'Перейти в песочницу':'Начать кампанию ↗';
  }
  function endTurn(){turn++;const a=counts();const people=a.house*12;const power=a.solar*24+a.wind*19,need=people*1.1;const income=people*4+40;budget+=income;if(power<need)boost.joy-=3;else boost.joy=Math.min(15,boost.joy+1);if(people>0&&a.water===0)boost.joy-=3;update();toast('Ход '+turn+': жители принесли '+income+' монет. '+(power<need?'Внимание: не хватает энергии!':'Энергоснабжение в норме.'))}
@@ -105,7 +105,7 @@
  $('builderReset').addEventListener('click',reset);
  $('builderRandom').addEventListener('click',()=>{reset();const keys=Object.keys(defs);for(let i=0;i<80;i++)if(Math.random()<.35){const k=keys[Math.floor(Math.random()*keys.length)];if(budget>=defs[k].cost){cells[i]={type:k};budget-=defs[k].cost}}draw();update();toast('✨ Случайный город создан! Изучи его и попробуй улучшить.')});
  $('cityEvent').addEventListener('click',randomEvent);
- $('cityModeToggle').addEventListener('click',()=>{mode=1-mode;missionIndex=(missionIndex+1)%missions.length;update();toast(mode?'Кампания включена! Выполни задание мэра.':'Свободная песочница: строй без ограничений по задачам.')});
+ $('cityModeToggle').addEventListener('click',()=>{mode=1-mode;missionIndex=(missionIndex+1)%missions.length;missionClaimed=false;update();toast(mode?'Кампания включена! Выполни задание мэра.':'Свободная песочница: строй без ограничений по задачам.')});
  $('cityNight').addEventListener('click',()=>{night=!night;document.querySelector('.city-game').classList.toggle('night-city',night);$('cityNight').textContent=night?'☀️ Дневной режим':'🌙 Ночной режим'});
  board.addEventListener('dblclick',endTurn);
  draw();update();

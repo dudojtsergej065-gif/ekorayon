@@ -6,12 +6,10 @@
       <div class="eyebrow">ТВОЙ ЭКОЛОГИЧЕСКИЙ НАПАРНИК</div>
       <h1><%= lang==='by'?'Прывітанне! Я ЭКАБОТ':'Привет! Я ЭКОБОТ' %></h1>
       <p><%= lang==='by'?'Задавай пытанні пра экалогію, сартаванне, заданні і працу платформы.':'Задавай вопросы об экологии, сортировке, заданиях и работе платформы.' %></p>
-      <div class="assistant-status"><i></i><%= assistantEnabled?(lang==='by'?'ГАТОВЫ ДА ГУТАРКІ':'ГОТОВ К ОБЩЕНИЮ'):(lang==='by'?'ПАТРЭБНА НАЛАДКА':'ТРЕБУЕТСЯ ПОДКЛЮЧЕНИЕ ИИ') %></div>
+      <div class="assistant-status"><i></i><%= lang==='by'?'БЯСПЛАТНЫ ДАПАМОЖНІК':'БЕСПЛАТНЫЙ ПОМОЩНИК' %></div>
     </div>
   </div>
-  <% if(!assistantEnabled){ %>
-    <div class="assistant-unavailable"><b>ЭКОБОТ почти готов!</b> Для запуска администрации нужно добавить секретный параметр <code>OPENAI_API_KEY</code> в переменные окружения Railway. Сам ключ нельзя размещать в коде сайта или отправлять в чат.</div>
-  <% } %>
+  <div class="assistant-unavailable"><b>ЭКОБОТ работает бесплатно!</b> Он использует встроенную базу знаний — API-ключ и платная подписка не нужны. Ответы можно расширять и улучшать.</div>
   <div class="assistant-chat">
     <div class="assistant-messages" id="assistantMessages" aria-live="polite">
       <div class="assistant-message bot"><%= lang==='by'?'Прывітанне! Я ЭКАБОТ 🌱 Чым магу дапамагчы?':'Привет! Я ЭКОБОТ 🌱 Чем могу помочь? Спроси меня о природе, переработке или экологических проектах!' %></div>
@@ -23,16 +21,15 @@
       <button type="button" data-question="Расскажи интересный экологический факт.">✨ Экофакт</button>
     </div>
     <form class="assistant-compose" id="assistantForm">
-      <textarea id="assistantInput" maxlength="2500" rows="2" placeholder="<%= lang==='by'?'Напішы сваё пытанне...':'Напиши свой вопрос...' %>" aria-label="Ваш вопрос" required <%= assistantEnabled?'':'disabled' %>></textarea>
-      <button id="assistantSend" type="submit" <%= assistantEnabled?'':'disabled' %>><%= lang==='by'?'Адправіць':'Отправить' %> ➤</button>
+      <textarea id="assistantInput" maxlength="2500" rows="2" placeholder="<%= lang==='by'?'Напішы сваё пытанне...':'Напиши свой вопрос...' %>" aria-label="Ваш вопрос" required ></textarea>
+      <button id="assistantSend" type="submit"><%= lang==='by'?'Адправіць':'Отправить' %> ➤</button>
     </form>
     <div class="assistant-note">ЭКОБОТ может ошибаться. Не отправляй ему пароли и личные данные.</div>
   </div>
 </section>
 <script>
 (function(){
-  const enabled=<%= assistantEnabled?'true':'false' %>;
-  if(!enabled)return;
+  const enabled=true;
   const form=document.getElementById('assistantForm');
   const input=document.getElementById('assistantInput');
   const send=document.getElementById('assistantSend');

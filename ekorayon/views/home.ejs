@@ -33,6 +33,11 @@
   <div class="stat stat-mission"><span class="stat-icon">🌍</span><span>Наша миссия</span><strong>0 <small>отходов</small></strong><i>Больше заботы о планете</i></div>
 </section>
 
+<section class="home-pulse-preview">
+  <div class="home-pulse-intro"><span class="eyebrow">◉ ЖИВАЯ ЛЕНТА РАЙОНА</span><h2>Пульс <em>ЭКОРАЙОНА</em></h2><p>Реальные события, подтверждённые результаты и достижения школ — всё в одном месте.</p><a class="btn primary" href="/pulse">Открыть пульс района ↗</a></div>
+  <div class="home-pulse-list"><% if(pulseEvents.length){ pulseEvents.forEach((event)=>{ %><a class="home-pulse-item" href="<%= event.url %>"><span class="home-pulse-icon"><%= ({collection:'♻',mission:'⚡',achievement:'🏆',news:'📣'})[event.kind]||'🌱' %></span><span><b><%= event.title %></b><small><%= event.school_name %> · <%= new Date(event.happened_at).toLocaleDateString('ru-RU') %></small></span><i>↗</i></a><% }) }else{ %><div class="home-pulse-empty">Первые события появятся после подтверждения результатов школ.</div><% } %></div>
+</section>
+
 <section class="section home-leaders-section">
   <div class="section-head"><div><span class="eyebrow home-eyebrow">🏆 ДВИЖЕНИЕ ЛИДЕРОВ</span><h2><%= t('Кто меняет район?','Хто змяняе раён?') %></h2><p class="section-subtitle">Школы, которые уже делают реальные шаги к чистому будущему.</p></div><a class="text-link home-more-link" href="/ratings"><%= t('Смотреть рейтинг','Глядзець рэйтынг') %> <b>↗</b></a></div>
   <div class="leader-grid home-leader-grid"><% if(leaders.length){leaders.forEach((s,i)=>{ %>

@@ -3,12 +3,12 @@
 <section class="home-hero">
   <div class="hero-orbit orbit-a"></div><div class="hero-orbit orbit-b"></div>
   <div class="hero-copy home-hero-copy">
-    <span class="hero-kicker"><span class="live-dot"></span> ЭКОЛОГИЧЕСКОЕ ДВИЖЕНИЕ ТВОЕГО РАЙОНА</span>
-    <h1>МЕНЯЙ МИР.<br><span>НАЧНИ СО СВОЕЙ</span><br><em>ШКОЛЫ.</em></h1>
-    <p>Собирай вторсырьё, участвуй в экоакциях, открывай достижения и помогай своему району становиться чище.</p>
+    <span class="hero-kicker"><span class="live-dot"></span> <%= t('ЭКОЛОГИЧЕСКОЕ ДВИЖЕНИЕ ТВОЕГО РАЙОНА','ЭКАЛАГІЧНЫ РУХ ТВАЙГО РАЁНА') %></span>
+    <h1><%= t('МЕНЯЙ МИР.','МЯНЯЙ СВЕТ.') %><br><span><%= t('НАЧНИ СО СВОЕЙ','ПАЧНІ СА СВАЁЙ') %></span><br><em><%= t('ШКОЛЫ.','ШКОЛЫ.') %></em></h1>
+    <p><%= t('Собирай вторсырьё, участвуй в экоакциях, открывай достижения и помогай своему району становиться чище.','Збірай другасную сыравіну, удзельнічай у экаакцыях, адкрывай дасягненні і дапамагай свайму раёну станавіцца чысцейшым.') %></p>
     <div class="actions home-actions">
-      <a class="btn primary" href="/schools">Исследовать школы <span>↗</span></a>
-      <a class="btn ghost" href="/about">Как это работает?</a>
+      <a class="btn primary" href="/schools"><%= t('Исследовать школы','Паглядзець школы') %> <span>↗</span></a>
+      <a class="btn ghost" href="/about"><%= t('Как это работает?','Як гэта працуе?') %></a>
     </div>
     <div class="hero-social-proof"><span class="proof-icon">♻</span><span>Один район. Много команд.<br><b>Одна большая цель.</b></span></div>
   </div>
@@ -27,14 +27,14 @@
 </section>
 
 <section class="stats-grid home-stats">
-  <div class="stat stat-main"><span class="stat-icon">♻</span><span>Собрано вторсырья</span><strong><%= Number(total).toLocaleString('ru-RU') %> <small>кг</small></strong><i>Вклад школ района</i></div>
-  <div class="stat stat-schools"><span class="stat-icon">🏫</span><span>Школы в движении</span><strong><%= schoolCount %></strong><i>Команды участников</i></div>
-  <div class="stat stat-classes"><span class="stat-icon">⚡</span><span>Активные классы</span><strong><%= classCount %></strong><i>Маленькие шаги — большой эффект</i></div>
+  <div class="stat stat-main"><span class="stat-icon">♻</span><span><%= t('Собрано вторсырья','Сабрана другаснай сыравіны') %></span><strong><%= Number(total).toLocaleString('ru-RU') %> <small>кг</small></strong><i>Вклад школ района</i></div>
+  <div class="stat stat-schools"><span class="stat-icon">🏫</span><span><%= t('Школы в движении','Школы ў руху') %></span><strong><%= schoolCount %></strong><i>Команды участников</i></div>
+  <div class="stat stat-classes"><span class="stat-icon">⚡</span><span><%= t('Активные классы','Актыўныя класы') %></span><strong><%= classCount %></strong><i>Маленькие шаги — большой эффект</i></div>
   <div class="stat stat-mission"><span class="stat-icon">🌍</span><span>Наша миссия</span><strong>0 <small>отходов</small></strong><i>Больше заботы о планете</i></div>
 </section>
 
 <section class="section home-leaders-section">
-  <div class="section-head"><div><span class="eyebrow home-eyebrow">🏆 ДВИЖЕНИЕ ЛИДЕРОВ</span><h2>Кто меняет район?</h2><p class="section-subtitle">Школы, которые уже делают реальные шаги к чистому будущему.</p></div><a class="text-link home-more-link" href="/ratings">Смотреть рейтинг <b>↗</b></a></div>
+  <div class="section-head"><div><span class="eyebrow home-eyebrow">🏆 ДВИЖЕНИЕ ЛИДЕРОВ</span><h2><%= t('Кто меняет район?','Хто змяняе раён?') %></h2><p class="section-subtitle">Школы, которые уже делают реальные шаги к чистому будущему.</p></div><a class="text-link home-more-link" href="/ratings"><%= t('Смотреть рейтинг','Глядзець рэйтынг') %> <b>↗</b></a></div>
   <div class="leader-grid home-leader-grid"><% if(leaders.length){leaders.forEach((s,i)=>{ %>
     <a class="leader-card home-leader-card rank-<%= i+1 %>" href="/schools/<%= s.id %>"><span class="rank"><%= ['01','02','03'][i] || String(i+1).padStart(2,'0') %></span><span class="leader-cup"><%= ['🥇','🥈','🥉'][i] || '🌿' %></span><h3><%= s.name %></h3><strong><%= Number(s.total).toLocaleString('ru-RU') %> <small>кг</small></strong><small class="leader-caption">Предварительные + подтверждённые результаты</small><span class="leader-arrow">↗</span></a>
   <%})}else{%><div class="empty">Пока нет опубликованных результатов. Станьте первой школой-участницей!</div><%}%></div>
@@ -46,7 +46,7 @@
   <div class="mission-visual"><div class="mission-circle circle-one"></div><div class="mission-circle circle-two"></div><div class="mission-planet">🌍</div><div class="mission-leaf leaf-a">🌿</div><div class="mission-leaf leaf-b">🍃</div><div class="mission-sticker">MAKE<br>IT<br>GREEN!</div></div>
 </section>
 
-<section class="section home-news-section"><div class="section-head"><div><span class="eyebrow home-eyebrow">📣 БУДЬ В ТЕМЕ</span><h2>Новости и события</h2><p class="section-subtitle">Экоакции, инициативы и важные события нашего района.</p></div></div><div class="news-grid home-news-grid"><% news.forEach((n,i)=>{ %><a class="news-card home-news-card news-tone-<%= i%3 %>" href="/news/<%= n.id %>"><span class="tag"><%= n.category %></span><span class="news-deco"><%= ['✳','🌱','⚡'][i%3] %></span><h3><%= n.title %></h3><p><%= n.body.slice(0,150) %><%= n.body.length>150?'…':'' %></p><small><%= new Date(n.created_at).toLocaleDateString('ru-RU') %><% if(n.school_name){ %> · <%= n.school_name %><% } %></small><span class="news-open">Открыть ↗</span></a><% }) %><% if(!news.length){ %><div class="empty">Новости появятся здесь после публикации администрацией.</div><% } %></div></section>
+<section class="section home-news-section"><div class="section-head"><div><span class="eyebrow home-eyebrow">📣 БУДЬ В ТЕМЕ</span><h2><%= t('Новости и события','Навіны і падзеі') %></h2><p class="section-subtitle">Экоакции, инициативы и важные события нашего района.</p></div></div><div class="news-grid home-news-grid"><% news.forEach((n,i)=>{ %><a class="news-card home-news-card news-tone-<%= i%3 %>" href="/news/<%= n.id %>"><span class="tag"><%= n.category %></span><span class="news-deco"><%= ['✳','🌱','⚡'][i%3] %></span><h3><%= n.title %></h3><p><%= n.body.slice(0,150) %><%= n.body.length>150?'…':'' %></p><small><%= new Date(n.created_at).toLocaleDateString('ru-RU') %><% if(n.school_name){ %> · <%= n.school_name %><% } %></small><span class="news-open">Открыть ↗</span></a><% }) %><% if(!news.length){ %><div class="empty">Новости появятся здесь после публикации администрацией.</div><% } %></div></section>
 
 <section class="home-final-cta"><div><span class="eyebrow">ТВОЙ ХОД</span><h2>Будущее не ждёт.<br><em>Действуй сегодня!</em></h2></div><a class="btn cta-btn" href="/schools">Найти свою школу <span>↗</span></a><span class="cta-symbol">♻</span></section>
 

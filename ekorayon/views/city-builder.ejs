@@ -2,6 +2,12 @@
 <section class="eco-builder city-game">
  <div class="builder-top"><div><span class="builder-kicker">✦ ЭКОРАЙОН · СИМУЛЯТОР БУДУЩЕГО</span><h1>ГОРОД <em>БУДУЩЕГО</em></h1><p>Построй живой город: заботься о жителях, планируй бюджет и находи баланс между технологиями и природой.</p></div><div class="builder-stamp">🏙️<small>ТВОЙ ГОРОД<br>ТВОИ РЕШЕНИЯ</small></div></div>
  <div class="city-gamebar"><div class="city-mode"><span>РЕЖИМ</span><b id="cityModeName">Песочница</b><button id="cityModeToggle">Сменить режим ↗</button></div><div class="city-resource"><small>БЮДЖЕТ</small><b id="cityMoney">1 500</b><small>эко-монет</small></div><div class="city-resource"><small>ЖИТЕЛИ</small><b id="cityPeople">0</b><small>человек</small></div><div class="city-resource"><small>ХОД</small><b id="cityTurn">1</b><small>развитие</small></div><button class="city-event-btn" id="cityEvent">⚡ Случайное событие</button></div>
+ <section class="city-music-panel" aria-label="Музыкальное сопровождение">
+  <div class="city-music-icon" aria-hidden="true">♫</div>
+  <div class="city-music-copy"><b>АТМОСФЕРА ГОРОДА</b><span id="cityMusicStatus">Тихая электронная мелодия · звуки будущего</span></div>
+  <button type="button" class="city-music-toggle" id="cityMusicToggle" aria-pressed="false">▶ Включить музыку</button>
+  <label class="city-volume"><span>ГРОМКОСТЬ</span><input id="cityMusicVolume" type="range" min="0" max="100" value="35" aria-label="Громкость музыки"></label>
+ </section>
  <div class="builder-layout">
   <aside class="builder-sidebar">
    <div class="builder-panel-head"><span>01 / СТРОИТЕЛЬСТВО</span><b>ОБЪЕКТЫ</b></div>
@@ -109,6 +115,48 @@
  $('cityNight').addEventListener('click',()=>{night=!night;document.querySelector('.city-game').classList.toggle('night-city',night);$('cityNight').textContent=night?'☀️ Дневной режим':'🌙 Ночной режим'});
  board.addEventListener('dblclick',endTurn);
  draw();update();
+ // Оригинальная процедурная музыка: синтезируется браузером, без внешних файлов.
+ let musicContext=null,musicMaster=null,musicTimer=null,musicStep=0;
+ const melody=[0,4,7,11,7,4,2,7,9,7,4,2,0,4,7,9];
+ const musicNotes=[261.63,293.66,329.63,349.23,392,440,493.88];
+ function playMusicNote(freq,when,duration,volume,wave='sine'){
+  if(!musicContext||!musicMaster)return;
+  const osc=musicContext.createOscillator(),gain=musicContext.createGain();
+  osc.type=wave;osc.frequency.setValueAtTime(freq,when);
+  gain.gain.setValueAtTime(.0001,when);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),when+.045);
+  gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
+  osc.connect(gain);gain.connect(musicMaster);osc.start(when);osc.stop(when+duration+.03);
+ }
+ function musicBeat(){
+  if(!musicContext)return;
+  const now=musicContext.currentTime,step=musicStep%melody.length;
+  const root=[130.81,146.83,110,164.81][Math.floor(musicStep/4)%4];
+  playMusicNote(musicNotes[melody[step]%musicNotes.length],now,.48,.12,'triangle');
+  if(musicStep%4===0){playMusicNote(root,now,1.65,.075,'sine');playMusicNote(root*2,now+.02,1.35,.025,'sine');}
+  if(musicStep%2===0)playMusicNote(musicNotes[(melody[step]+2)%musicNotes.length]*2,now+.08,.22,.025,'sine');
+  musicStep++;
+ }
+ function setMusicVolume(){if(musicMaster&&musicContext){musicMaster.gain.setTargetAtTime(Number($('cityMusicVolume').value)/100*.22,musicContext.currentTime,.12)}}
+ async function toggleCityMusic(){
+  const button=$('cityMusicToggle'),status=$('cityMusicStatus');
+  if(musicTimer){
+   clearInterval(musicTimer);musicTimer=null;
+   if(musicContext&&musicMaster){musicMaster.gain.setTargetAtTime(.0001,musicContext.currentTime,.2);const old=musicContext;musicContext=null;musicMaster=null;setTimeout(()=>old.close().catch(()=>{}),900)}
+   button.textContent='▶ Включить музыку';button.setAttribute('aria-pressed','false');status.textContent='Музыка выключена';return;
+  }
+  try{
+   const AudioCtx=window.AudioContext||window.webkitAudioContext;
+   if(!AudioCtx){status.textContent='Браузер не поддерживает аудиосинтез';return;}
+   musicContext=new AudioCtx();await musicContext.resume();
+   musicMaster=musicContext.createGain();musicMaster.gain.setValueAtTime(.0001,musicContext.currentTime);musicMaster.connect(musicContext.destination);setMusicVolume();
+   musicStep=0;musicBeat();musicTimer=setInterval(musicBeat,520);
+   musicMaster.gain.setTargetAtTime(Number($('cityMusicVolume').value)/100*.22,musicContext.currentTime,.8);
+   button.textContent='Ⅱ Выключить музыку';button.setAttribute('aria-pressed','true');status.textContent='Играет оригинальная мелодия города будущего';
+  }catch(error){status.textContent='Не удалось включить звук. Попробуй ещё раз.';}
+ }
+ $('cityMusicToggle').addEventListener('click',toggleCityMusic);
+ $('cityMusicVolume').addEventListener('input',setMusicVolume);
  // Advance the city economy with an explicit turn button, never automatically.
  const turnBtn=document.createElement('button');turnBtn.className='city-turn-btn';turnBtn.textContent='⏭ Завершить ход · получить доход';turnBtn.addEventListener('click',endTurn);document.querySelector('.city-map-tools').appendChild(turnBtn);
 })();

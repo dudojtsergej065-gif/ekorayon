@@ -128,9 +128,90 @@ app.post('/admin/feedback/:id/status',requireAdmin,async(req,res,next)=>{try{awa
 app.post('/admin/tickets/:id/reply',requireAdmin,async(req,res,next)=>{try{await query("UPDATE support_tickets SET admin_reply=$1,status='answered',updated_at=NOW() WHERE id=$2 RETURNING school_id",[req.body.reply,req.params.id]);const r=await query('SELECT school_id FROM support_tickets WHERE id=$1',[req.params.id]);if(r.rowCount)await notify({schoolId:r.rows[0].school_id,title:'Ответ технической поддержки',body:'На ваше обращение поступил ответ.'});res.redirect('/admin/inbox');}catch(e){next(e)}});
 app.get('/notifications',requireAuth,async(req,res,next)=>{try{const u=req.session.user;const r=await query('SELECT * FROM notifications WHERE user_id=$1 OR (user_id IS NULL AND ($2::bigint IS NOT NULL AND school_id=$2)) ORDER BY created_at DESC LIMIT 100',[u.id,u.school_id]);await query('UPDATE notifications SET read_at=NOW() WHERE user_id=$1 OR (user_id IS NULL AND school_id=$2)',[u.id,u.school_id]);res.render('notifications',{title:'Уведомления',items:r.rows});}catch(e){next(e)}});
 
-// Скачать грамоту (доступна школе-владельцу и администрации).
-app.get('/certificates/:id/pdf',requireAuth,async(req,res,next)=>{try{const u=req.session.user;const params=[req.params.id];let sql='SELECT * FROM certificates WHERE id=$1';if(u.role==='school'){sql+=' AND school_id=$2';params.push(u.school_id);}const r=await query(sql,params);if(!r.rowCount)return res.status(404).render('error',{title:'Грамота не найдена',message:'Грамота не найдена или у вас нет доступа.'});const c=r.rows[0];const doc=new PDFDocument({size:'A4',layout:'landscape',margin:48,info:{Title:'Грамота ЭКОРАЙОН',Author:'ЭКОРАЙОН'}});res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition',`inline; filename="ekorayon-certificate-${c.id}.pdf"`);doc.pipe(res);const font=__dirname + '/../public/fonts/DejaVuSans.ttf';doc.font(font);const W=doc.page.width,H=doc.page.height;doc.rect(18,18,W-36,H-36).lineWidth(3).stroke('#087b58');doc.rect(27,27,W-54,H-54).lineWidth(1).stroke('#b5d94a');doc.circle(70,70,23).fill('#d9ff72');doc.fontSize(20).fillColor('#073c2b').text('Э',57,57,{width:26,align:'center'});doc.fontSize(12).fillColor('#087b58').text('ЭКОРАЙОН',0,62,{align:'center',characterSpacing:3});doc.fontSize(34).fillColor('#123d31').text('ГРАМОТА',0,112,{align:'center',characterSpacing:4});doc.fontSize(13).fillColor('#52766a').text('НАГРАЖДАЕТСЯ',0,165,{align:'center',characterSpacing:2});doc.moveTo(170,197).lineTo(W-170,197).lineWidth(1).stroke('#a5c96b');doc.fontSize(27).fillColor('#087b58').text(c.recipient_name,70,213,{align:'center',width:W-140});doc.fontSize(14).fillColor('#304e45').text(c.certificate_type==='student'?'за личный вклад в сохранение природы и ответственное отношение к окружающей среде':c.certificate_type==='class'?'за активное участие в экологической акции и вклад в чистоту нашего района':'за значительный вклад в развитие экологической культуры и ответственное отношение к природе',85,270,{align:'center',width:W-170,lineGap:7});doc.fontSize(16).fillColor('#123d31').text('Собрано и передано на переработку:',0,335,{align:'center'});doc.fontSize(31).fillColor('#087b58').text(`${Number(c.quantity).toLocaleString('ru-RU',{maximumFractionDigits:2})} ${c.unit}`,0,366,{align:'center'});doc.fontSize(12).fillColor('#52766a').text(`${c.material_name} · ${c.school_name}${c.class_name?' · '+c.class_name:''}`,0,414,{align:'center'});doc.fontSize(10).fillColor('#52766a').text(`Отчётный период: ${new Date(c.period_month).toLocaleDateString('ru-RU',{month:'long',year:'numeric'})}`,0,440,{align:'center'});doc.moveTo(95,H-105).lineTo(265,H-105).stroke('#78988b');doc.moveTo(W-265,H-105).lineTo(W-95,H-105).stroke('#78988b');doc.fontSize(10).fillColor('#52766a').text('Представитель школы',95,H-93,{width:170,align:'center'});doc.text('ЭКОРАЙОН',W-265,H-93,{width:170,align:'center'});doc.fontSize(9).fillColor('#78988b').text(`№ ${c.serial_number||('ЭР-'+c.id)} · ${new Date(c.created_at).toLocaleDateString('ru-RU')}`,0,H-55,{align:'center'});doc.end();}catch(e){next(e)}});
- 
+// Скачать грамоту: праздничный PDF в фирменном стиле ЭКОРАЙОН.
+app.get('/certificates/:id/pdf',requireAuth,async(req,res,next)=>{
+  try{
+    const u=req.session.user;
+    const params=[req.params.id];
+    let sql='SELECT * FROM certificates WHERE id=$1';
+    if(u.role==='school'){sql+=' AND school_id=$2';params.push(u.school_id);}
+    const r=await query(sql,params);
+    if(!r.rowCount)return res.status(404).render('error',{title:'Грамота не найдена',message:'Грамота не найдена или у вас нет доступа.'});
+    const c=r.rows[0];
+    const doc=new PDFDocument({size:'A4',layout:'landscape',margin:0,info:{Title:'Грамота ЭКОРАЙОН',Author:'ЭКОРАЙОН',Subject:'Награда за вклад в экологию'}});
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition',`inline; filename="ekorayon-certificate-${c.id}.pdf"`);
+    res.setHeader('Cache-Control','private, no-store');
+    doc.pipe(res);
+
+    // Встраиваемый шрифт с поддержкой кириллицы — без подмены на Helvetica.
+    const font=__dirname + '/../public/fonts/DejaVuSans.ttf';
+    doc.registerFont('Eco',font);
+    const W=doc.page.width,H=doc.page.height;
+    const dark='#082F27',green='#087B58',mint='#B8F2D0',gold='#D6AD55',cream='#FFFDF4',ink='#173D32',muted='#55766B';
+
+    // Глубокий природный фон и светлая наградная область.
+    doc.rect(0,0,W,H).fill(dark);
+    doc.save();
+    doc.roundedRect(25,25,W-50,H-50,18).fill(cream);
+    doc.restore();
+    doc.roundedRect(25,25,W-50,H-50,18).lineWidth(5).stroke(gold);
+    doc.roundedRect(36,36,W-72,H-72,13).lineWidth(1.5).stroke(green);
+
+    // Декоративные листья по углам.
+    function leaf(x,y,angle,color){
+      doc.save();
+      doc.translate(x,y);
+      doc.rotate(angle);
+      doc.ellipse(0,0,8,22).fill(color);
+      doc.moveTo(0,-17).lineTo(0,17).lineWidth(1).stroke(dark);
+      doc.restore();
+    }
+    [[63,66,-35,mint],[83,83,28,gold],[W-63,66,35,mint],[W-83,83,-28,gold],
+     [63,H-66,35,gold],[83,H-83,-28,mint],[W-63,H-66,-35,gold],[W-83,H-83,28,mint]]
+      .forEach(a=>leaf(...a));
+
+    // Верхняя плашка бренда.
+    doc.roundedRect(W/2-115,51,230,31,15).fill(dark);
+    doc.font('Eco').fontSize(11).fillColor(mint).text('Э К О Р А Й О Н',W/2-105,61,{width:210,align:'center',characterSpacing:1.2});
+    doc.font('Eco').fontSize(32).fillColor(green).text('ГРАМОТА',0,105,{width:W,align:'center',characterSpacing:3});
+    doc.fontSize(11).fillColor(muted).text('НАГРАЖДАЕТСЯ',0,151,{width:W,align:'center',characterSpacing:2});
+
+    // Имя получателя — главный акцент.
+    doc.moveTo(155,183).lineTo(W-155,183).lineWidth(1.4).stroke(gold);
+    const recipient=String(c.recipient_name||c.school_name||'Участник экологической акции');
+    doc.font('Eco').fontSize(recipient.length>42?20:27).fillColor(dark).text(recipient,85,199,{width:W-170,align:'center',lineBreak:true});
+    doc.moveTo(155,246).lineTo(W-155,246).lineWidth(1.4).stroke(gold);
+
+    const reason=c.certificate_type==='student'
+      ?'за личный вклад в сохранение природы и ответственное отношение к окружающей среде'
+      :c.certificate_type==='class'
+        ?'за активное участие в экологических инициативах и дружную командную работу'
+        :'за значительный вклад в развитие экологической культуры и заботу о природе родного края';
+    doc.font('Eco').fontSize(12).fillColor(ink).text(reason,105,263,{width:W-210,align:'center',lineGap:5});
+
+    // Показатель достижения в отдельной наградной плашке.
+    doc.roundedRect(W/2-185,319,370,76,13).fill(dark);
+    doc.fontSize(10).fillColor(mint).text('СОБРАНО И ПЕРЕДАНО НА ПЕРЕРАБОТКУ',W/2-170,331,{width:340,align:'center',characterSpacing:.6});
+    const amount=`${Number(c.quantity).toLocaleString('ru-RU',{maximumFractionDigits:2})} ${c.unit||''}`;
+    doc.fontSize(25).fillColor('#F4D98C').text(amount,W/2-170,350,{width:340,align:'center'});
+
+    const detail=[c.material_name,c.school_name,c.class_name].filter(Boolean).join('  •  ');
+    doc.fontSize(10).fillColor(muted).text(detail,70,410,{width:W-140,align:'center'});
+    const period=new Date(c.period_month);
+    doc.fontSize(10).fillColor(muted).text(`Отчётный период: ${period.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})}`,70,432,{width:W-140,align:'center'});
+
+    // Подписи и номер грамоты.
+    const signY=H-105;
+    doc.moveTo(105,signY).lineTo(285,signY).lineWidth(1).stroke(green);
+    doc.moveTo(W-285,signY).lineTo(W-105,signY).stroke(green);
+    doc.fontSize(9).fillColor(muted).text('Представитель школы',105,signY+8,{width:180,align:'center'});
+    doc.text('ЭКОРАЙОН',W-285,signY+8,{width:180,align:'center'});
+    doc.fontSize(8).fillColor(muted).text(`№ ${c.serial_number||('ЭР-'+c.id)}     •     ${new Date(c.created_at).toLocaleDateString('ru-RU')}`,0,H-48,{width:W,align:'center'});
+    doc.end();
+  }catch(e){next(e)}
+});
+
 // Reports: current totals, downloadable PDF and Excel exports
 app.get('/reports',requireAuth,async(req,res,next)=>{try{const sid=req.session.user.role==='school'?req.session.user.school_id:null;const r=await query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE ($1::bigint IS NULL OR s.id=$1) GROUP BY s.id ORDER BY s.name`,[sid]);res.render('reports',{title:'Отчёты',rows:r.rows});}catch(e){next(e)}});
 app.get('/reports/pdf/:schoolId',requireAuth,async(req,res,next)=>{try{const sid=req.session.user.role==='school'?req.session.user.school_id:Number(req.params.schoolId);if(req.session.user.role==='school'&&sid!==req.session.user.school_id)return res.sendStatus(403);const s=await query('SELECT * FROM schools WHERE id=$1',[sid]);if(!s.rowCount)return res.sendStatus(404);const data=await query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.school_id=$1 AND e.status='approved' GROUP BY m.code,m.name ORDER BY m.name`,[sid]);const doc=new PDFDocument({margin:50});res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition',`attachment; filename="ekorayon-school-${sid}.pdf"`);doc.pipe(res);doc.font(__dirname + '/../public/fonts/DejaVuSans.ttf');doc.fontSize(18).text('EKORAYON — SCHOOL REPORT',{align:'center'});doc.moveDown();doc.fontSize(12).text(`School: ${s.rows[0].name}`);doc.text(`Address: ${s.rows[0].address||'—'}`);doc.text(`Generated: ${new Date().toLocaleDateString('ru-RU')}`);doc.moveDown().text('Approved collection totals (kg):');data.rows.forEach(x=>doc.text(`${x.name}: ${x.total} kg`));doc.moveDown().fontSize(11).text(`Director: ${s.rows[0].director||'____________________'}`);doc.text('Responsible person: ____________________');doc.text('Signature: ____________________      Seal: ____________________');doc.end();}catch(e){next(e)}});

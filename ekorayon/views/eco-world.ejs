@@ -1,0 +1,92 @@
+<%- include('partials/header') %>
+<%
+ const score=Number(myStats?.points||0);
+ const levels=[
+  {min:0,name:'Эко-новичок',icon:'🌱',desc:'Первый шаг в большом экологическом движении'},
+  {min:100,name:'Защитник природы',icon:'🛡️',desc:'Ты уже заметно меняешь мир вокруг'},
+  {min:300,name:'Эко-эксперт',icon:'🌿',desc:'Знания и действия превращаются в результат'},
+  {min:700,name:'Хранитель планеты',icon:'🌍',desc:'Твой вклад вдохновляет других'},
+  {min:1500,name:'Легенда ЭКОРАЙОНА',icon:'✨',desc:'Высший уровень экологического мастерства'}
+ ];
+ let levelIndex=0;levels.forEach((l,i)=>{if(score>=l.min)levelIndex=i});
+ const level=levels[levelIndex],nextLevel=levels[levelIndex+1]||null;
+ const levelProgress=nextLevel?Math.min(100,Math.round((score-level.min)/(nextLevel.min-level.min)*100)):100;
+ const gardenStage=Math.min(5,Math.floor(score/100));
+ const gardenPlants=['🌱','🌿','🌳','🌲','🌺','🌳'];
+%>
+<section class="eco-universe-hero">
+ <div class="eu-orbit eu-orbit-one"></div><div class="eu-orbit eu-orbit-two"></div>
+ <div class="eu-hero-copy"><span class="eu-kicker">✦ ТВОЯ ЭКОЛОГИЧЕСКАЯ ВСЕЛЕННАЯ</span><h1>ЭКО<em>МИР</em></h1>
+ <p>Здесь реальные добрые дела превращаются в уровни, достижения и растущий виртуальный мир. Исследуй, играй и меняй район!</p>
+ <div class="eu-hero-actions"><a class="eu-button" href="#passport">Открыть мой эко-паспорт ↘</a><a class="eu-link" href="/impact">Результаты района ↗</a></div>
+ <div class="eu-live-note"><i></i> Данные о школах и результатах — из платформы ЭКОРАЙОН</div></div>
+ <div class="eu-planet-wrap"><div class="eu-planet-ring"></div><div class="eu-planet">🌍</div><span class="eu-float eu-float-a">🌱</span><span class="eu-float eu-float-b">♻️</span><span class="eu-float eu-float-c">✨</span><div class="eu-planet-label">НАША ОБЩАЯ ПЛАНЕТА</div></div>
+ <div class="eu-hero-foot"><span>ЭКОМИР / 2026</span><span>МАЛЕНЬКИЕ ДЕЙСТВИЯ · БОЛЬШИЕ ПЕРЕМЕНЫ</span></div>
+</section>
+<section class="eu-stats">
+ <article><span>♻️</span><small>ПОДТВЕРЖДЁННЫЙ СБОР</small><strong><%= Number(totals.kg).toLocaleString('ru-RU') %> <i>кг</i></strong></article>
+ <article><span>🏫</span><small>ШКОЛЫ В ДВИЖЕНИИ</small><strong><%= totals.schools %></strong></article>
+ <article><span>⚡</span><small>ЭКО-БАЛЛЫ</small><strong><%= Number(totals.points).toLocaleString('ru-RU') %></strong></article>
+ <article><span>🏆</span><small>ПОЛУЧЕНО НАГРАД</small><strong><%= totals.badges %></strong></article>
+</section>
+<section class="eu-section" id="passport">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">01 / ТВОЙ ПРОФИЛЬ</span><h2>Эко-паспорт</h2><p>Личная карточка достижений на основе подтверждённых результатов школы.</p></div><span class="eu-section-symbol">🪪</span></div>
+ <% if(user&&user.role==='school'&&myStats){ %>
+ <div class="eu-passport">
+  <div class="eu-passport-top"><div class="eu-passport-avatar"><%= level.icon %></div><div><small>УЧАСТНИК ЭКОМИРА</small><h3><%= myStats.school_name %></h3><span><%= level.name %></span></div><div class="eu-passport-stamp">ЭКО<br>ПАСПОРТ</div></div>
+  <div class="eu-passport-metrics"><div><small>ЭКО-БАЛЛЫ</small><b><%= score.toLocaleString('ru-RU') %></b></div><div><small>СОБРАНО</small><b><%= Number(myStats.kg).toLocaleString('ru-RU') %> кг</b></div><div><small>НАГРАДЫ</small><b><%= myStats.badges %></b></div><div><small>МЕСТО В РЕЙТИНГЕ</small><b><%= myStats.rank||'—' %></b></div></div>
+  <div class="eu-level-progress"><div><span>ПРОГРЕСС УРОВНЯ</span><b><%= nextLevel?score+' / '+nextLevel.min+' баллов':'МАКСИМАЛЬНЫЙ УРОВЕНЬ' %></b></div><div class="eu-progress-track"><i style="width:<%= levelProgress %>%"></i></div><small><%= level.desc %></small></div>
+  <div class="eu-passport-bottom"><span>♻️ РЕАЛЬНЫЕ ДЕЙСТВИЯ. НАСТОЯЩИЕ РЕЗУЛЬТАТЫ.</span><a href="/school-panel">Открыть кабинет ↗</a></div>
+ </div>
+ <% }else{ %><div class="eu-locked-passport"><span>🔐</span><div><b>Твой эко-паспорт ждёт тебя</b><p>Войди в кабинет школы, чтобы увидеть её баллы, уровень, достижения и место в рейтинге.</p></div><a href="/login">Войти в кабинет ↗</a></div><% } %>
+ <div class="eu-levels"><% levels.forEach((l,i)=>{ %><div class="eu-level-card <%= i<=levelIndex&&user&&user.role==='school'?'unlocked':'' %>"><span><%= l.icon %></span><b><%= l.name %></b><small><%= l.min %> баллов</small></div><% }) %></div>
+</section>
+<section class="eu-section">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">02 / ЖИВАЯ ЭКОСЕТЬ</span><h2>Школы района</h2><p>Карта-схема участников и их вклад. Это схема сети, а не географическая карта: точные координаты школ пока не хранятся в системе.</p></div><a class="eu-text-link" href="/schools">Все школы ↗</a></div>
+ <div class="eu-network">
+  <div class="eu-network-core"><span>🌍</span><b>ЭКОРАЙОН</b><small>ОДНА КОМАНДА</small></div>
+  <div class="eu-school-nodes"><% schools.forEach((s,i)=>{ %><a class="eu-school-node" href="/schools/<%= s.id %>"><span class="eu-node-icon"><%= ['🌱','🌳','♻️','🌿','🏫'][i%5] %></span><span><b><%= s.name %></b><small><%= s.locality||s.address||'Школа-участник' %></small></span><strong><%= Number(s.kg).toLocaleString('ru-RU') %> кг</strong></a><% }) %><% if(!schools.length){ %><p>Школы появятся здесь после подключения к платформе.</p><% } %></div>
+ </div>
+</section>
+<section class="eu-section">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">03 / ВИРТУАЛЬНАЯ ПРИРОДА</span><h2>Мой эко-сад</h2><p>Сад показывает уровень экологической активности. Чем больше подтверждённых баллов у школы, тем пышнее виртуальный мир.</p></div><span class="eu-section-symbol">🌳</span></div>
+ <div class="eu-garden" data-stage="<%= gardenStage %>"><div class="eu-garden-sky"><span>☀️</span><i>☁️</i><b>☁️</b></div><div class="eu-garden-ground"><div class="eu-garden-tree tree-small">🌳</div><div class="eu-garden-tree tree-main"><%= gardenPlants[gardenStage] %></div><div class="eu-garden-tree tree-flower"><%= gardenStage>=2?'🌼':'🌱' %></div><div class="eu-garden-house">🏡</div><div class="eu-garden-bush">🌿</div><div class="eu-garden-bush bush-two">🌷</div></div><div class="eu-garden-caption"><b><%= user&&user.role==='school'?'Сад школы «'+(myStats?.school_name||'')+'»':'Общий сад ЭКОРАЙОНА' %></b><span><%= user&&user.role==='school'?level.name:'Каждая школа помогает ему расти' %></span></div></div>
+</section>
+<section class="eu-section">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">04 / ЗНАНИЯ В ДЕЙСТВИИ</span><h2>Эко-квиз</h2><p>Проверь себя! Выбери один ответ в каждом вопросе и узнай свой результат.</p></div><span class="eu-section-symbol">🧠</span></div>
+ <div class="eu-quiz" id="euQuiz">
+  <div class="eu-quiz-top"><span id="euQuizStep">ВОПРОС 1 ИЗ 5</span><span id="euQuizScore">0 правильных</span></div><div class="eu-quiz-progress"><i id="euQuizBar"></i></div>
+  <h3 id="euQuizQuestion">Что важно сделать перед сдачей пластиковой упаковки?</h3><div class="eu-quiz-options" id="euQuizOptions"></div><div class="eu-quiz-feedback" id="euQuizFeedback" aria-live="polite"></div><button class="eu-quiz-next" id="euQuizNext" type="button" disabled>Следующий вопрос →</button>
+ </div>
+</section>
+<section class="eu-section">
+ <div class="eu-section-head"><div><span class="eu-eyebrow">05 / ДОСТИЖЕНИЯ РАЙОНА</span><h2>Галерея наград</h2><p>Награды открываются за реальные экологические результаты школ.</p></div><a class="eu-text-link" href="/achievements">Все достижения ↗</a></div>
+ <div class="eu-awards"><% achievements.forEach(a=>{ %><article><span><%= a.icon %></span><div><b><%= lang==='by'?a.title_by:a.title_ru %></b><small><%= lang==='by'?a.description_by:a.description_ru %></small></div><strong><%= a.earned_count %></strong></article><% }) %></div>
+</section>
+<section class="eu-admin-panel">
+ <div><span class="eu-eyebrow">06 / УПРАВЛЕНИЕ РАЙОНОМ</span><h2>Центр управления</h2><p>Инструменты для команды администрации: школы, баллы, задания, новости и контроль результатов.</p></div>
+ <% if(user&&['admin','staff'].includes(user.role)){ %><div class="eu-admin-links"><a href="/dashboard">Панель администрации ↗</a><a href="/admin/schools">Управление школами ↗</a><a href="/admin/points">Настройка баллов ↗</a><a href="/admin/missions">Управление заданиями ↗</a><a href="/admin/audit">Журнал действий ↗</a></div><% }else{ %><a class="eu-admin-login" href="/login">Вход для администрации ↗</a><% } %>
+</section>
+<script>
+(()=>{
+ const questions=[
+  {q:'Что важно сделать перед сдачей пластиковой упаковки?',a:['Опорожнить и проверить правила приёма','Сжечь упаковку','Смешать с пищевыми отходами'],correct:0,why:'Верно! Чистая и опорожнённая упаковка чаще подходит для сортировки. Всегда проверяй местные правила.'},
+  {q:'Куда лучше сдавать использованные батарейки?',a:['В контейнер для бумаги','В специальный пункт сбора','В обычную корзину'],correct:1,why:'Именно так! Батарейки собирают отдельно в специальных пунктах.'},
+  {q:'Какая привычка помогает экономить бумагу?',a:['Печатать каждый черновик','Использовать обе стороны листа','Выбрасывать чистые листы'],correct:1,why:'Отлично! Повторное использование бумаги сокращает количество отходов.'},
+  {q:'Что означает принцип повторного использования?',a:['Сразу выбросить вещь','Использовать вещь снова по назначению','Покупать больше упаковки'],correct:1,why:'Да! Повторное использование продлевает срок службы вещей.'},
+  {q:'Что делать, если не знаешь, принимают ли материал на переработку?',a:['Положить его в любой контейнер','Ориентироваться на маркировку и правила пункта','Смешать со всем мусором'],correct:1,why:'Правильно! Уточняй правила конкретного пункта приёма.'}
+ ];
+ let index=0,score=0,answered=false;
+ const q=document.getElementById('euQuizQuestion'),opts=document.getElementById('euQuizOptions'),feedback=document.getElementById('euQuizFeedback'),next=document.getElementById('euQuizNext'),step=document.getElementById('euQuizStep'),scoreEl=document.getElementById('euQuizScore'),bar=document.getElementById('euQuizBar');
+ function render(){
+  answered=false;const item=questions[index];q.textContent=item.q;step.textContent='ВОПРОС '+(index+1)+' ИЗ '+questions.length;scoreEl.textContent=score+' правильных';bar.style.width=(index/questions.length*100)+'%';feedback.textContent='';next.disabled=true;next.textContent=index===questions.length-1?'Посмотреть результат':'Следующий вопрос →';opts.innerHTML='';
+  item.a.forEach((answer,i)=>{const b=document.createElement('button');b.type='button';b.className='eu-quiz-option';b.textContent=answer;b.addEventListener('click',()=>choose(i));opts.appendChild(b)});
+ }
+ function choose(choice){
+  if(answered)return;answered=true;const item=questions[index];if(choice===item.correct)score++;[...opts.children].forEach((b,i)=>{b.disabled=true;if(i===item.correct)b.classList.add('correct');else if(i===choice)b.classList.add('wrong')});feedback.textContent=(choice===item.correct?'✓ Верно! ':'↗ Попробуй запомнить: ')+item.why;scoreEl.textContent=score+' правильных';next.disabled=false;
+ }
+ next.addEventListener('click',()=>{if(!answered)return;if(index<questions.length-1){index++;render()}else{q.textContent='Твой результат: '+score+' из '+questions.length+'!';opts.innerHTML='';feedback.textContent=score===5?'Идеально! Ты настоящий эко-эксперт 🌟':'Отличная работа! Продолжай узнавать новое 🌱';step.textContent='КВИЗ ЗАВЕРШЁН';bar.style.width='100%';next.textContent='Пройти ещё раз';next.disabled=false;next.onclick=()=>{index=0;score=0;next.onclick=null;render()}}});
+ render();
+})();
+</script>
+<%- include('partials/footer') %>

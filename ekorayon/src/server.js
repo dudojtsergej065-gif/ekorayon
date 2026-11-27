@@ -27,6 +27,7 @@ app.use(session({
   cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 8 * 60 * 60 * 1000 }
 }));
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: true, legacyHeaders: false, message: 'Слишком много попыток. Попробуйте позже.' });
+const assistantLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 12, standardHeaders: true, legacyHeaders: false, message: { error: 'Слишком много вопросов подряд. Попробуйте позже.' } });
 
 app.use(async (req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -84,6 +85,24 @@ async function verifyCaptcha(req){
   return String(req.body.answer)===String(req.session.captchaAnswer);
 }
 function monthStart(value){ const d=value?new Date(value+'T00:00:00'):new Date(); return new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10); }
+
+app.get('/assistant',(req,res)=>res.render('assistant',{title:req.session.lang==='by'?'Эка-памочнік':'Эко-помощник',assistantEnabled:Boolean(process.env.OPENAI_API_KEY)}));
+app.post('/api/assistant',assistantLimiter,async(req,res)=>{
+ try{
+  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:'Помощник пока настраивается. Администрации нужно подключить ключ ИИ-сервиса.'});
+  const raw=Array.isArray(req.body.messages)?req.body.messages:[];
+  const messages=raw.slice(-12).filter(m=>m&&['user','assistant'].includes(m.role)&&typeof m.content==='string').map(m=>({role:m.role,content:m.content.slice(0,2500)}));
+  if(!messages.length||messages[messages.length-1].role!=='user')return res.status(400).json({error:'Напишите вопрос, чтобы начать беседу.'});
+  if(messages[messages.length-1].content.trim().length<2)return res.status(400).json({error:'Добавьте немного больше текста.'});
+  const instructions='Ты — ЭКОБОТ, дружелюбный виртуальный помощник образовательной платформы ЭКОРАЙОН. Отвечай на языке пользователя (русском или белорусском), ясно, доброжелательно и по делу. Твоя главная тема — экология, сортировка и переработка отходов, школьные экологические проекты, акции, задания, работа с платформой ЭКОРАЙОН и общие учебные вопросы. Если спрашивают о точных текущих баллах, тарифах, рейтингах, аккаунтах или данных школы, честно скажи, что не видишь закрытую или актуальную базу платформы, и предложи проверить соответствующий раздел сайта. Не выдумывай факты, цифры и функции. Не проси пароли, коды доступа, адреса, телефоны или другие личные данные. Не помогай с опасными экспериментами или действиями; для обращения с батарейками, химикатами и электронными отходами советуй привлекать взрослых и специальные пункты приёма. Не выдавай себя за человека. Давай короткие структурированные ответы, при необходимости — пошаговые безопасные рекомендации.';
+  const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':'Bearer '+process.env.OPENAI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.5',instructions,input:messages,store:false,max_output_tokens:700})});
+  const data=await response.json();
+  if(!response.ok){console.error('assistant API error:',response.status,data.error?.message||'unknown');return res.status(502).json({error:'Сейчас не удалось получить ответ. Попробуйте ещё раз чуть позже.'});}
+  const answer=String(data.output_text||'').trim();
+  if(!answer)return res.status(502).json({error:'Помощник не сформировал ответ. Попробуйте переформулировать вопрос.'});
+  res.json({answer});
+ }catch(e){console.error('assistant error:',e.message);res.status(500).json({error:'Произошла техническая ошибка. Попробуйте позже.'});}
+});
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'ЭКОРАЙОН'}));
 app.get('/language/:lang',(req,res)=>{ if(['ru','by'].includes(req.params.lang)) req.session.lang=req.params.lang; res.redirect('back'); });

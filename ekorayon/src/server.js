@@ -177,6 +177,35 @@ app.get('/help-info',(req,res)=>{const by=req.session.lang==='by';const sections
 ];res.render('page',{title:by?'Карысная інфармацыя':'Полезная информация',body:by?'Практычныя парады па сартаванні, школьным зборам і працы з платформай.':'Про сортировку, подготовку вторсырья и организацию экологических акций.',sections});});
 app.get('/calendar',(req,res)=>res.render('page',{title:req.session.lang==='by'?'Экалагічны каляндар':'Экологический календарь',body:req.session.lang==='by'?'Тут публікуюцца раённыя экалагічныя даты, будучыя акцыі і мерапрыемствы школ.':'Здесь публикуются районные экологические даты, предстоящие акции и мероприятия школ.'}));
 app.get('/contacts',(req,res)=>res.render('page',{title:req.session.lang==='by'?'Кантакты':'Контакты',body:req.session.lang==='by'?'Кантакты раённага каардынатара будуць дададзены адміністрацыяй.':'Контакты районного координатора будут добавлены администрацией после запуска проекта.'}));
+app.get('/eco-world',async(req,res,next)=>{try{
+ const [totals,schools,achievements]=await Promise.all([
+  query(`SELECT
+   (SELECT COALESCE(SUM(quantity),0)::numeric(14,2) FROM collection_entries WHERE status='approved') kg,
+   (SELECT COUNT(*)::int FROM schools WHERE status='active') schools,
+   (SELECT COALESCE(SUM(points),0)::numeric(14,2) FROM point_ledger) points,
+   (SELECT COUNT(*)::int FROM school_achievements) badges`),
+  query(`SELECT s.id,s.name,s.locality,s.address,
+   (SELECT COALESCE(SUM(e.quantity),0)::numeric(14,2) FROM collection_entries e WHERE e.school_id=s.id AND e.status='approved') kg,
+   (SELECT COALESCE(SUM(l.points),0)::numeric(14,2) FROM point_ledger l WHERE l.school_id=s.id) points
+   FROM schools s WHERE s.status='active' ORDER BY kg DESC,s.name LIMIT 30`),
+  query(`SELECT a.id,a.icon,a.title_ru,a.title_by,a.description_ru,a.description_by,COUNT(sa.id)::int earned_count
+   FROM eco_achievements a LEFT JOIN school_achievements sa ON sa.achievement_id=a.id
+   GROUP BY a.id ORDER BY a.threshold_kg,a.id`)
+ ]);
+ let myStats=null;
+ if(req.session.user?.role==='school'){
+  const r=await query(`SELECT s.name school_name,
+   (SELECT COALESCE(SUM(points),0)::numeric(14,2) FROM point_ledger WHERE school_id=s.id) points,
+   (SELECT COALESCE(SUM(quantity),0)::numeric(14,2) FROM collection_entries WHERE school_id=s.id AND status='approved') kg,
+   (SELECT COUNT(*)::int FROM school_achievements WHERE school_id=s.id) badges,
+   (SELECT COUNT(*)::int+1 FROM schools x WHERE x.status='active' AND
+    (SELECT COALESCE(SUM(points),0) FROM point_ledger WHERE school_id=x.id)>
+    (SELECT COALESCE(SUM(points),0) FROM point_ledger WHERE school_id=s.id)) rank
+   FROM schools s WHERE s.id=$1 AND s.status='active'`,[req.session.user.school_id]);
+  myStats=r.rows[0]||null;
+ }
+ res.render('eco-world',{title:'ЭКОМИР — твоя экологическая вселенная',totals:totals.rows[0],schools:schools.rows,achievements:achievements.rows,myStats});
+ }catch(e){next(e)}});
 app.get('/schools',async(req,res,next)=>{try{const r=await query(`SELECT s.*,COALESCE(SUM(e.quantity) FILTER (WHERE e.status IN ('pending','approved')),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY s.name`);res.render('schools',{title:'Школы района',schools:r.rows});}catch(e){next(e)}});
 app.get('/schools/:id',async(req,res,next)=>{try{const s=await query('SELECT * FROM schools WHERE id=$1 AND status=\'active\'',[req.params.id]);if(!s.rowCount)return res.status(404).render('error',{title:'Не найдено',message:'Школа не найдена.'});const [stats,classes,news]=await Promise.all([query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.school_id=$1 AND e.status IN ('pending','approved') GROUP BY m.code,m.name ORDER BY m.name`,[req.params.id]),query('SELECT * FROM classes WHERE school_id=$1 AND active=true ORDER BY name',[req.params.id]),query('SELECT * FROM news WHERE school_id=$1 AND status=\'published\' ORDER BY created_at DESC LIMIT 10',[req.params.id])]);res.render('school-detail',{title:s.rows[0].name,school:s.rows[0],stats:stats.rows,classes:classes.rows,news:news.rows});}catch(e){next(e)}});
 app.get('/ratings',async(req,res,next)=>{try{const [r,m,classes,monthly,yearly,pointSchools]=await Promise.all([query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE s.status='active' GROUP BY s.id ORDER BY total DESC,s.name`),query(`SELECT m.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM materials m LEFT JOIN collection_entries e ON e.material_code=m.code AND e.status IN ('pending','approved') GROUP BY m.code,m.name ORDER BY total DESC`),query(`SELECT c.id,c.name class_name,s.id school_id,s.name school_name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM classes c JOIN schools s ON s.id=c.school_id LEFT JOIN collection_entries e ON e.class_id=c.id AND e.status IN ('pending','approved') WHERE c.active AND s.status='active' GROUP BY c.id,s.id ORDER BY total DESC,c.name`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('month',e.period_month)=date_trunc('month',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') AND date_trunc('year',e.period_month)=date_trunc('year',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 10`),query(`SELECT s.id,s.name,COALESCE(SUM(l.points),0)::numeric(14,2) points FROM schools s LEFT JOIN point_ledger l ON l.school_id=s.id WHERE s.status='active' GROUP BY s.id ORDER BY points DESC,s.name`)]);res.render('ratings',{title:'Рейтинги',schools:r.rows,materials:m.rows,classes:classes.rows,monthly:monthly.rows,yearly:yearly.rows,pointSchools:pointSchools.rows});}catch(e){next(e)}});

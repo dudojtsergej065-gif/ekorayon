@@ -142,6 +142,22 @@ app.get('/', async (req,res,next)=>{
   res.render('home',{title:'ЭКОРАЙОН',total:totals.rows[0].total,schoolCount:schools.rows[0].count,classCount:classes.rows[0].count,leaders:leaders.rows,news:news.rows,pulseEvents});
  } catch(e){next(e)}
 });
+app.get('/mission-earth',async(req,res,next)=>{try{
+ const [totals,schools,classes,missions,leaders]=await Promise.all([
+  query(`SELECT COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM collection_entries e JOIN schools s ON s.id=e.school_id WHERE e.status IN ('pending','approved') AND s.status='active'`),
+  query("SELECT COUNT(*)::int count FROM schools WHERE status='active'"),
+  query("SELECT COUNT(*)::int count FROM classes WHERE active=true AND school_id IN (SELECT id FROM schools WHERE status='active')"),
+  query("SELECT COUNT(*)::int count FROM mission_submissions m JOIN schools s ON s.id=m.school_id WHERE m.status='approved' AND s.status='active'"),
+  query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status IN ('pending','approved') WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 5`)
+ ]);
+ const total=Number(totals.rows[0].total)||0;
+ const milestones=[100,250,500,1000,2500,5000];
+ const nextMilestone=milestones.find(x=>total<x)||Math.ceil((total+1)/5000)*5000;
+ const previous=milestones.filter(x=>x<nextMilestone).slice(-1)[0]||0;
+ const progress=Math.max(0,Math.min(100,Math.round((total-previous)/(nextMilestone-previous)*100)));
+ const maxLeader=Math.max(0,...leaders.rows.map(x=>Number(x.total)||0));
+ res.render('mission-earth',{title:'Миссия «Земля»',total,schoolCount:schools.rows[0].count,classCount:classes.rows[0].count,missionCount:missions.rows[0].count,leaders:leaders.rows,maxLeader,nextMilestone,progress,milestones});
+ }catch(e){next(e)}});
 app.get('/about',(req,res)=>res.render('page',{title:req.session.lang==='by'?'Пра праект':'О проекте',body:req.session.lang==='by'?'ЭКАРАЁН аб’ядноўвае школы раёна ў агульнай экалагічнай ініцыятыве. Мы ўлічваем збор другаснай сыравіны, дзелімся вынікамі і падтрымліваем адказнае стаўленне да навакольнага асяроддзя.':'ЭКОРАЙОН объединяет школы района в общей экологической инициативе. Мы учитываем фактический сбор вторсырья, делимся результатами и поддерживаем ответственное отношение к окружающей среде.'}));
 app.get('/rules',(req,res)=>{const by=req.session.lang==='by';const sections=by?[
 {heading:'Хто можа ўдзельнічаць',text:'Да праекта далучаюцца школы і адукацыйныя ўстановы раёна. Ад кожнай школы пажадана вызначыць адказнага дарослага каардынатара, які працуе з кабінетам і правярае даныя перад адпраўкай.'},

@@ -51,6 +51,29 @@ function requireSchool(req,res,next){ if(!req.session.user || req.session.user.r
 function redirectMsg(res,path,message){ res.redirect(path + (path.includes('?')?'&':'?') + 'message=' + encodeURIComponent(message)); }
 async function audit(user, action, entity=null, entityId=null, details={}) { try { await query('INSERT INTO audit_log(actor_id,action,entity,entity_id,details) VALUES($1,$2,$3,$4,$5)',[user?.id||null,action,entity,entityId,JSON.stringify(details)]); } catch(e){ console.error('audit:',e.message); } }
 async function notify({userId=null,schoolId=null,title,body}) { await query('INSERT INTO notifications(user_id,school_id,title,body) VALUES($1,$2,$3,$4)',[userId,schoolId,title,body]); }
+async function awardEligibleAchievements(schoolId){
+ const metrics=await query(`SELECT
+  (SELECT COALESCE(SUM(quantity),0) FROM collection_entries WHERE school_id=$1 AND status='approved') kg,
+  (SELECT COALESCE(SUM(points),0) FROM point_ledger WHERE school_id=$1) points,
+  (SELECT COUNT(*) FROM mission_submissions WHERE school_id=$1 AND status='approved') missions`,[schoolId]);
+ const v=metrics.rows[0];
+ const gained=await query(`INSERT INTO school_achievements(school_id,achievement_id)
+  SELECT $1,id FROM eco_achievements
+  WHERE threshold_kg<=$2 AND threshold_points<=$3 AND threshold_missions<=$4
+  ON CONFLICT(school_id,achievement_id) DO NOTHING RETURNING achievement_id`,[schoolId,v.kg,v.points,v.missions]);
+ if(gained.rowCount){
+  const names=await query('SELECT title_ru FROM eco_achievements WHERE id=ANY($1::bigint[])',[gained.rows.map(x=>x.achievement_id)]);
+  await notify({schoolId,title:'Новое экологическое достижение!',body:'Школа получила награду: '+names.rows.map(x=>x.title_ru).join(', ')});
+ }
+}
+const SCHOOL_AVATARS=[
+ {code:'sprout',name:'Росток',icon:'🌱',points:0},
+ {code:'fox',name:'Эко-лис',icon:'🦊',points:25},
+ {code:'owl',name:'Мудрая сова',icon:'🦉',points:75},
+ {code:'wolf',name:'Лесной волк',icon:'🐺',points:150},
+ {code:'dragon',name:'Зелёный дракон',icon:'🐉',points:300},
+ {code:'phoenix',name:'Феникс природы',icon:'🔥',points:500}
+];
 async function verifyCaptcha(req){
   if(process.env.TURNSTILE_SECRET_KEY){
     const token=req.body['cf-turnstile-response'];
@@ -117,7 +140,7 @@ app.post('/admin/missions/:id/review',requireAdmin,async(req,res,next)=>{try{
  if(r.rowCount&&status==='approved'){
   const m=await query('SELECT title_ru,points FROM eco_missions WHERE id=$1',[r.rows[0].mission_id]);
   if(m.rowCount&&Number(m.rows[0].points)>0)await query("INSERT INTO point_ledger(school_id,kind,points,reason,created_by) VALUES($1,'event',$2,$3,$4)",[r.rows[0].school_id,m.rows[0].points,'Выполнение экозадания: '+m.rows[0].title_ru,req.session.user.id]);
-  await notify({schoolId:r.rows[0].school_id,title:'Экозадание проверено',body:'Участие подтверждено. Дополнительные баллы начислены.'});
+  await notify({schoolId:r.rows[0].school_id,title:'Экозадание проверено',body:'Участие подтверждено. Дополнительные баллы начислены.'}); await awardEligibleAchievements(r.rows[0].school_id);
  }
  res.redirect('/admin/missions?message='+encodeURIComponent('Результат проверки сохранён.'));
  }catch(e){next(e)}});
@@ -149,6 +172,46 @@ app.get('/seasons',async(req,res,next)=>{try{
  query(`SELECT s.id,s.name,COALESCE(SUM(e.quantity),0)::numeric(14,2) total FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status='approved' AND date_trunc('year',e.period_month)=date_trunc('year',CURRENT_DATE) WHERE s.status='active' GROUP BY s.id ORDER BY total DESC LIMIT 20`)]);
  res.render('seasons',{title:req.session.lang==='by'?'Экасезоны':'Экосезоны',month:month.rows,year:year.rows});
  }catch(e){next(e)}});
+
+app.get('/world',async(req,res,next)=>{try{
+ const [totals,leaders]=await Promise.all([
+ query(`SELECT COALESCE(SUM(quantity),0)::numeric(14,2) kg,COUNT(DISTINCT school_id)::int schools FROM collection_entries WHERE status='approved'`),
+ query(`SELECT s.id,s.name,s.avatar_code,COALESCE(SUM(e.quantity),0)::numeric(14,2) kg FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status='approved' WHERE s.status='active' GROUP BY s.id ORDER BY kg DESC LIMIT 8`)]);
+ const stages=[
+  {kg:0,name:'Пробуждение планеты',nameBy:'Абуджэнне планеты',icon:'🌍',desc:'Первый росток новой экологической истории','descBy':'Першы парастак новай экалагічнай гісторыі'},
+  {kg:100,name:'Зелёные долины',nameBy:'Зялёныя даліны',icon:'🌱',desc:'Появляются первые леса и зелёные зоны','descBy':'З’яўляюцца першыя лясы і зялёныя зоны'},
+  {kg:500,name:'Лес живых историй',nameBy:'Лес жывых гісторый',icon:'🌳',desc:'Растут леса, возвращаются лесные жители','descBy':'Растуць лясы, вяртаюцца лясныя жыхары'},
+  {kg:1000,name:'Город чистой энергии',nameBy:'Горад чыстай энергіі',icon:'🏙️',desc:'Открываются экостанции и чистые улицы','descBy':'Адкрываюцца экастанцыі і чыстыя вуліцы'},
+  {kg:2500,name:'Океан жизни',nameBy:'Акіян жыцця',icon:'🐬',desc:'Восстанавливаются водные пространства','descBy':'Аднаўляюцца водныя прасторы'},
+  {kg:5000,name:'Заповедник будущего',nameBy:'Запаведнік будучыні',icon:'🦋',desc:'Появляется большой природный заповедник','descBy':'З’яўляецца вялікі прыродны запаведнік'},
+  {kg:10000,name:'Экополис будущего',nameBy:'Экапаліс будучыні',icon:'✨',desc:'Район достигает легендарного экологического уровня','descBy':'Раён дасягае легендарнага экалагічнага ўзроўню'}
+ ];
+ const kg=Number(totals.rows[0].kg||0);
+ let stageIndex=0;for(let i=0;i<stages.length;i++)if(kg>=stages[i].kg)stageIndex=i;
+ const current=stages[stageIndex],next=stages[stageIndex+1]||null;
+ const progress=next?Math.max(0,Math.min(100,(kg-current.kg)/(next.kg-current.kg)*100)):100;
+ res.render('world',{title:req.session.lang==='by'?'Віртуальны свет':'Виртуальный мир',totals:totals.rows[0],leaders:leaders.rows,stages,current,next,progress});
+ }catch(e){next(e)}});
+app.get('/battles',async(req,res,next)=>{try{
+ const [rank,month]=await Promise.all([
+ query(`SELECT s.id,s.name,s.avatar_code,
+  COALESCE(SUM(e.quantity),0)::numeric(14,2) kg,
+  (SELECT COALESCE(SUM(p.points),0)::numeric(14,2) FROM point_ledger p WHERE p.school_id=s.id) points,
+  (SELECT COUNT(*)::int FROM school_achievements a WHERE a.school_id=s.id) badges
+  FROM schools s LEFT JOIN collection_entries e ON e.school_id=s.id AND e.status='approved' AND date_trunc('month',e.period_month)=date_trunc('month',CURRENT_DATE)
+  WHERE s.status='active' GROUP BY s.id ORDER BY kg DESC,points DESC LIMIT 30`),
+ query("SELECT to_char(CURRENT_DATE,'TMMonth YYYY') label")]);
+ res.render('battles',{title:req.session.lang==='by'?'Экабатлы':'Эко-баттлы',schools:rank.rows,monthLabel:month.rows[0].label});
+ }catch(e){next(e)}});
+app.post('/school/avatar',requireSchool,async(req,res,next)=>{try{
+ const code=String(req.body.avatar_code||'');
+ const option=SCHOOL_AVATARS.find(x=>x.code===code);
+ if(!option)return redirectMsg(res,'/school-panel','Неизвестный персонаж команды.');
+ const p=await query('SELECT COALESCE(SUM(points),0) total FROM point_ledger WHERE school_id=$1',[req.session.user.school_id]);
+ if(Number(p.rows[0].total)<option.points)return redirectMsg(res,'/school-panel','Этот персонаж пока закрыт. Наберите больше баллов!');
+ await query('UPDATE schools SET avatar_code=$1 WHERE id=$2',[code,req.session.user.school_id]);
+ res.redirect('/school-panel?message='+encodeURIComponent('Персонаж команды обновлён!'));
+ }catch(e){next(e)}});
 app.get('/news/:id',async(req,res,next)=>{try{const r=await query(`SELECT n.*,s.name school_name FROM news n LEFT JOIN schools s ON s.id=n.school_id WHERE n.id=$1 AND n.status='published'`,[req.params.id]);if(!r.rowCount)return res.status(404).render('error',{title:'Не найдено',message:'Материал не найден.'});res.render('news-detail',{title:r.rows[0].title,item:r.rows[0]});}catch(e){next(e)}});
 
 // Login, registration request, feedback
@@ -162,7 +225,7 @@ app.post('/feedback',loginLimiter,async(req,res,next)=>{try{const {name,contact,
 
 // Dashboard
 app.get('/dashboard',requireAuth,async(req,res,next)=>{try{const u=req.session.user;if(u.role==='school')return res.redirect('/school-panel');if(!['admin','staff'].includes(u.role))return res.redirect('/');const [counts,entries,requests,feedback,tickets]=await Promise.all([query(`SELECT (SELECT COUNT(*) FROM schools WHERE status='active') schools,(SELECT COUNT(*) FROM collection_entries WHERE status='pending') pending,(SELECT COUNT(*) FROM feedback WHERE status='new') feedback,(SELECT COUNT(*) FROM support_tickets WHERE status='new') tickets`),query(`SELECT e.*,s.name school_name,m.name material_name,c.name class_name FROM collection_entries e JOIN schools s ON s.id=e.school_id JOIN materials m ON m.code=e.material_code LEFT JOIN classes c ON c.id=e.class_id ORDER BY e.created_at DESC LIMIT 12`),query(`SELECT cr.*,s.name school_name FROM class_requests cr JOIN schools s ON s.id=cr.school_id WHERE cr.status='pending' ORDER BY cr.created_at DESC LIMIT 8`),query(`SELECT * FROM feedback ORDER BY created_at DESC LIMIT 8`),query(`SELECT t.*,s.name school_name FROM support_tickets t JOIN schools s ON s.id=t.school_id ORDER BY t.created_at DESC LIMIT 8`)]);res.render('admin-dashboard',{title:'Панель администрации',counts:counts.rows[0],entries:entries.rows,requests:requests.rows,feedback:feedback.rows,tickets:tickets.rows});}catch(e){next(e)}});
-app.get('/school-panel',requireSchool,async(req,res,next)=>{try{const sid=req.session.user.school_id;const [school,classes,entries,notifs,tickets,points,pointHistory,certificates,badges]=await Promise.all([query('SELECT * FROM schools WHERE id=$1',[sid]),query('SELECT * FROM classes WHERE school_id=$1 AND active=true ORDER BY name',[sid]),query(`SELECT e.*,m.name material_name,c.name class_name FROM collection_entries e JOIN materials m ON m.code=e.material_code LEFT JOIN classes c ON c.id=e.class_id WHERE e.school_id=$1 ORDER BY e.created_at DESC LIMIT 20`,[sid]),query('SELECT * FROM notifications WHERE school_id=$1 ORDER BY created_at DESC LIMIT 8',[sid]),query('SELECT * FROM support_tickets WHERE school_id=$1 ORDER BY created_at DESC LIMIT 5',[sid]),query('SELECT COALESCE(SUM(points),0)::numeric(14,2) total FROM point_ledger WHERE school_id=$1',[sid]),query('SELECT kind,points,reason,created_at FROM point_ledger WHERE school_id=$1 ORDER BY created_at DESC LIMIT 10',[sid]),query('SELECT * FROM certificates WHERE school_id=$1 ORDER BY created_at DESC LIMIT 30',[sid]),query('SELECT a.* FROM school_achievements sa JOIN eco_achievements a ON a.id=sa.achievement_id WHERE sa.school_id=$1 ORDER BY sa.earned_at DESC',[sid])]);res.render('school-dashboard',{title:'Кабинет школы',school:school.rows[0],classes:classes.rows,entries:entries.rows,notifications:notifs.rows,tickets:tickets.rows,points:points.rows[0].total,pointHistory:pointHistory.rows,certificates:certificates.rows,badges:badges.rows});}catch(e){next(e)}});
+app.get('/school-panel',requireSchool,async(req,res,next)=>{try{const sid=req.session.user.school_id;const [school,classes,entries,notifs,tickets,points,pointHistory,certificates,badges,avatarPoints]=await Promise.all([query('SELECT * FROM schools WHERE id=$1',[sid]),query('SELECT * FROM classes WHERE school_id=$1 AND active=true ORDER BY name',[sid]),query(`SELECT e.*,m.name material_name,c.name class_name FROM collection_entries e JOIN materials m ON m.code=e.material_code LEFT JOIN classes c ON c.id=e.class_id WHERE e.school_id=$1 ORDER BY e.created_at DESC LIMIT 20`,[sid]),query('SELECT * FROM notifications WHERE school_id=$1 ORDER BY created_at DESC LIMIT 8',[sid]),query('SELECT * FROM support_tickets WHERE school_id=$1 ORDER BY created_at DESC LIMIT 5',[sid]),query('SELECT COALESCE(SUM(points),0)::numeric(14,2) total FROM point_ledger WHERE school_id=$1',[sid]),query('SELECT kind,points,reason,created_at FROM point_ledger WHERE school_id=$1 ORDER BY created_at DESC LIMIT 10',[sid]),query('SELECT * FROM certificates WHERE school_id=$1 ORDER BY created_at DESC LIMIT 30',[sid]),query('SELECT a.* FROM school_achievements sa JOIN eco_achievements a ON a.id=sa.achievement_id WHERE sa.school_id=$1 ORDER BY sa.earned_at DESC',[sid]),query('SELECT COALESCE(SUM(points),0) total FROM point_ledger WHERE school_id=$1',[sid])]);res.render('school-dashboard',{title:'Кабинет школы',school:school.rows[0],classes:classes.rows,entries:entries.rows,notifications:notifs.rows,tickets:tickets.rows,points:points.rows[0].total,pointHistory:pointHistory.rows,certificates:certificates.rows,badges:badges.rows,avatarOptions:SCHOOL_AVATARS.filter(a=>Number(avatarPoints.rows[0].total)>=a.points),avatarPoints:Number(avatarPoints.rows[0].total)});}catch(e){next(e)}});
 // School collection data
 app.get('/entries/new',requireSchool,async(req,res,next)=>{try{const c=await query('SELECT * FROM classes WHERE school_id=$1 AND active=true ORDER BY name',[req.session.user.school_id]);const m=await query('SELECT * FROM materials ORDER BY name');res.render('entry-form',{title:'Новая запись',classes:c.rows,materials:m.rows});}catch(e){next(e)}});
 app.post('/entries',requireSchool,async(req,res,next)=>{try{const {class_id,material_code,quantity,period_month,note,certificate_type,student_name}=req.body;const q=Number(quantity);const certType=['auto','school','class','student'].includes(certificate_type)?certificate_type:'auto';const student=(student_name||'').trim();if(!material_code||!Number.isFinite(q)||q<=0) return redirectMsg(res,'/entries/new','Укажите вид вторсырья и положительное количество.');const cls=class_id?await query('SELECT id FROM classes WHERE id=$1 AND school_id=$2 AND active=true',[class_id,req.session.user.school_id]):{rowCount:1};if(!cls.rowCount)return redirectMsg(res,'/entries/new','Выбранный класс не найден.');if((certType==='class'||certType==='student')&&!class_id)return redirectMsg(res,'/entries/new','Для грамоты классу или ученику выберите класс.');if(certType==='student'&&!student)return redirectMsg(res,'/entries/new','Укажите имя ученика для персональной грамоты.');const r=await query(`INSERT INTO collection_entries(school_id,class_id,material_code,quantity,period_month,note,created_by,certificate_type,student_name) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,[req.session.user.school_id,class_id||null,material_code,q,monthStart(period_month),note||null,req.session.user.id,certType,student||null]);await query(`INSERT INTO entry_history(entry_id,action,details,actor_id) VALUES($1,'created',$2,$3)`,[r.rows[0].id,JSON.stringify({quantity:q,material_code,certificate_type:certType,student_name:student||null}),req.session.user.id]);await notify({schoolId:req.session.user.school_id,title:'Новая запись отправлена',body:'Запись добавлена в предварительную статистику и ожидает проверки.'});await audit(req.session.user,'create_entry','collection_entries',r.rows[0].id);res.redirect('/school-panel?message='+encodeURIComponent('Запись добавлена и ожидает проверки. После подтверждения грамота появится в кабинете.'));}catch(e){next(e)}});
@@ -174,16 +237,7 @@ app.post('/school/support',requireSchool,async(req,res,next)=>{try{await query('
 
 // Admin review and management
 app.post('/admin/entries/:id/review',requireAdmin,async(req,res,next)=>{try{const {status,review_comment}=req.body;if(!['approved','correction'].includes(status))return redirectMsg(res,'/dashboard','Недопустимый статус.');const r=await query('UPDATE collection_entries SET status=$1,review_comment=$2,reviewed_by=$3,updated_at=NOW() WHERE id=$4 RETURNING school_id,material_code,quantity',[status,review_comment||null,req.session.user.id,req.params.id]);if(!r.rowCount)return redirectMsg(res,'/dashboard','Запись не найдена.');if(status==='approved'){await query(`INSERT INTO point_ledger(school_id,entry_id,kind,points,rate_snapshot,reason,created_by) SELECT $1,$2,'collection',ROUND($3::numeric*pr.points_per_kg,2),pr.points_per_kg,'Начисление за подтверждённую сдачу: '||m.name,$4 FROM point_rates pr JOIN materials m ON m.code=pr.material_code WHERE pr.material_code=$5 ON CONFLICT(entry_id) DO NOTHING`,[r.rows[0].school_id,req.params.id,r.rows[0].quantity,req.session.user.id,r.rows[0].material_code]);const cert=await query(`INSERT INTO certificates(entry_id,school_id,certificate_type,recipient_name,school_name,class_name,material_name,quantity,unit,period_month) SELECT e.id,e.school_id,CASE WHEN e.certificate_type='auto' THEN CASE WHEN e.class_id IS NULL THEN 'school' ELSE 'class' END ELSE e.certificate_type END,CASE WHEN e.certificate_type='student' THEN e.student_name WHEN e.certificate_type='class' THEN COALESCE(c.name,'Класс') ELSE s.name END,s.name,c.name,m.name,e.quantity,m.unit,e.period_month FROM collection_entries e JOIN schools s ON s.id=e.school_id JOIN materials m ON m.code=e.material_code LEFT JOIN classes c ON c.id=e.class_id WHERE e.id=$1 AND e.status='approved' AND (e.certificate_type<>'student' OR NULLIF(BTRIM(e.student_name),'') IS NOT NULL) ON CONFLICT(entry_id) DO NOTHING RETURNING id,created_at`,[req.params.id]);if(cert.rowCount){const serial='ЭР-'+new Date(cert.rows[0].created_at).getFullYear()+'-'+String(cert.rows[0].id).padStart(6,'0');await query('UPDATE certificates SET serial_number=$1 WHERE id=$2',[serial,cert.rows[0].id]);}}
-if(status==='approved'){
- const total=await query("SELECT COALESCE(SUM(quantity),0)::numeric(14,2) total FROM collection_entries WHERE school_id=$1 AND status='approved'",[r.rows[0].school_id]);
- const gained=await query(`INSERT INTO school_achievements(school_id,achievement_id)
-  SELECT $1,id FROM eco_achievements WHERE threshold_kg<=$2
-  ON CONFLICT(school_id,achievement_id) DO NOTHING RETURNING achievement_id`,[r.rows[0].school_id,total.rows[0].total]);
- if(gained.rowCount){
-  const names=await query('SELECT title_ru FROM eco_achievements WHERE id=ANY($1::bigint[])',[gained.rows.map(x=>x.achievement_id)]);
-  await notify({schoolId:r.rows[0].school_id,title:'Новое экологическое достижение!',body:'Школа получила награду: '+names.rows.map(x=>x.title_ru).join(', ')});
- }
-}
+if(status==='approved') await awardEligibleAchievements(r.rows[0].school_id);
 await query(`INSERT INTO entry_history(entry_id,action,details,actor_id) VALUES($1,$2,$3,$4)`,[req.params.id,status,JSON.stringify({review_comment}),req.session.user.id]);await notify({schoolId:r.rows[0].school_id,title:status==='approved'?'Запись подтверждена':'Требуется исправление',body:review_comment||(status==='approved'?'Администрация подтвердила запись. Баллы начислены, грамота сформирована и доступна в кабинете школы.':'Пожалуйста, исправьте запись и отправьте повторно.')});await audit(req.session.user,'review_entry','collection_entries',req.params.id,{status});res.redirect('/dashboard?message='+encodeURIComponent('Статус записи обновлён.'));}catch(e){next(e)}});
 app.get('/admin/schools',requireAdmin,async(req,res,next)=>{try{const r=await query(`SELECT s.*,COUNT(DISTINCT u.id)::int users_count FROM schools s LEFT JOIN users u ON u.school_id=s.id GROUP BY s.id ORDER BY s.name`);res.render('admin-schools',{title:'Управление школами',schools:r.rows});}catch(e){next(e)}});
 app.get('/admin/schools/new',requireAdmin,(req,res)=>res.render('school-form',{title:'Добавить школу'}));
